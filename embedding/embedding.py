@@ -21,6 +21,12 @@ class EmbeddingMetadata:
         self.input_tokens += int(metadata.input_tokens)
         self.latency_ms += int(metadata.latency_ms)
 
+    def to_json(self):
+        return {
+            'input_token': self.input_tokens,
+            'latency_ms': self.latency_ms
+        }
+
 
 class Embeddings:
     """

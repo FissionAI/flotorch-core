@@ -42,8 +42,8 @@ class BedrockInferencer(BaseInferencer):
             Tuple[Dict[Any, Any], str]: Metadata and the generated response text.
         """
         try:
-            converse_prompt = self._generate_prompt(user_query, context)
-            messages = self._prepare_payload(context, converse_prompt)
+            converse_prompt = self.generate_prompt(user_query, context)
+            messages = self._prepare_payload(converse_prompt)
             inference_config={"maxTokens": 512, "temperature": self.temperature, "topP": 0.9}
             response = self.client.converse(
                 modelId=self.model_id,
@@ -63,7 +63,7 @@ class BedrockInferencer(BaseInferencer):
             logger.error(f"Error generating text with Bedrock: {str(e)}")
             raise
 
-    def _generate_prompt(self, user_query: str, context: List[Dict]) -> str:
+    def generate_prompt(self, user_query: str, context: List[Dict]) -> str:
         """
         Construct a prompt for the Bedrock inferencer based on the user query and context.
 
@@ -76,7 +76,7 @@ class BedrockInferencer(BaseInferencer):
         """
         system_prompt = self.n_shot_prompt_guide_obj.get("system_prompt")
 
-        context_text = self._format_context(context)
+        context_text = self.format_context(context)
 
         base_prompt = self.n_shot_prompt_guide_obj.get("user_prompt", "") if self.n_shot_prompt_guide_obj else ""
 
@@ -108,10 +108,7 @@ class BedrockInferencer(BaseInferencer):
 
         return prompt.strip()
 
-    def _prepare_payload(self, context: List[Dict], prompt: str):
-        context_text = self._format_context(context)
-        logger.debug(f"Formatted context text length: {len(context_text)}")
-
+    def _prepare_payload(self, prompt: str):
         conversation = [
             {
                 "role": "user", 
@@ -120,8 +117,11 @@ class BedrockInferencer(BaseInferencer):
         ]
         return conversation
 
-    def _format_context(self, context: List[Dict[str, str]]) -> str:
+    def format_context(self, context: List[Dict[str, str]]) -> str:
         """Format context documents into a single string."""
+        if not context or len(context) == 0:
+            return ""
+        
         context_text = "\n".join([
             f"Context {i+1}:\n{doc.get('text', '')}"
             for i, doc in enumerate(context)

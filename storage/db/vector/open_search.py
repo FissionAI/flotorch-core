@@ -40,7 +40,8 @@ class OpenSearchClient(VectorStorage):
     # TODO: Need to create a model class for the return type of the search method
     # This model class has to be created in the base class and this return type has to be consitent in all the vector_sotrage classes
     def search(self, chunk: Chunk,  knn: int, hierarchical=False):
-        query_vector = self.embedder.embed(chunk).embeddings
+        embedding = self.embedder.embed(chunk)
+        query_vector = embedding.embeddings
         body = self.embed_query(query_vector, knn, hierarchical)
         response = self.client.search(index=self.index, body=body)
 
@@ -60,7 +61,10 @@ class OpenSearchClient(VectorStorage):
 
         return VectorStorageSearchResponse(
             status=True,
-            result=result
+            result=result,
+            metadata={
+                "embedding_metadata": embedding.metadata
+            }
         )
     
     def embed_query(self, query_vector: List[float], knn: int, hierarchical=False):

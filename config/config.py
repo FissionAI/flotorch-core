@@ -98,6 +98,15 @@ class Config:
             raise ValueError("experiment table name is not set. Value not present in configuration")
         return experiment_table_name
     
+    def get_experiment_question_metrics_table(self) -> str:
+        """
+        Retrieves the experiment question metrics table name from the configuration provider.
+        """
+        experiment_question_metrics_table = self.provider.get("experiment_question_metrics_table")
+        if not experiment_question_metrics_table:
+            raise ValueError("experiment question metrics table name is not set. Value not present in configuration")
+        return experiment_question_metrics_table
+    
     def get_sagemaker_arn_role(self) -> str:
         """
         Retrieves the SageMaker ARN role from the configuration provider.

@@ -11,40 +11,15 @@ from sagemaker.deserializers import JSONDeserializer
 from sagemaker.jumpstart.model import JumpStartModel
 from sagemaker.huggingface import HuggingFaceModel, get_huggingface_llm_image_uri
 import sagemaker
-import logging
 import numpy as np
 import json
 import time
 from botocore.exceptions import ClientError
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+from logger.global_logger import get_logger
+from utils.sagemaker_utils import SageMakerUtils, EMBEDDING_MODELS
 
-# Model configurations
-EMBEDDING_MODELS = {
-    "huggingface-sentencesimilarity-bge-large-en-v1-5": {
-        "model_name": "bge-large",
-        "model_source": "jumpstart",
-        "dimension": 1024,
-        "instance_type": "ml.g5.2xlarge",
-        "input_key": "text_inputs"
-    },
-    "huggingface-sentencesimilarity-bge-m3": {
-        "model_name": "bge-m3",
-        "model_source": "jumpstart",
-        "dimension": 1024,
-        "instance_type": "ml.g5.2xlarge",
-        "input_key": "text_inputs"
-    },
-    "huggingface-textembedding-gte-qwen2-7b-instruct": {
-        "model_name": "qwen",
-        "model_source": "jumpstart",
-        "dimension": 3584,
-        "instance_type": "ml.g5.2xlarge",
-        "input_key": "inputs"
-    }
-}
-
+logger = get_logger()
 
 class SageMakerEmbedder(BaseEmbedding):
     def __init__(self, model_id: str, region: str, role_arn: str, dimensions: int = 256, normalize: bool = True) -> None:
@@ -73,16 +48,17 @@ class SageMakerEmbedder(BaseEmbedding):
         # Initialize additional embedding-related attributes
         self.embedding_model_id = model_id
         # self.embedding_model_endpoint_name = 'flotorch-embedding-endpoint'
-        self.embedding_model_endpoint_name = f"{self._sanitize_name(model_id)[:44]}-embedding-endpoint"
+        self.embedding_model_endpoint_name = f"{SageMakerUtils.sanitize_name(model_id)[:44]}-embedding-endpoint"
         
         self.embedding_dimension = EMBEDDING_MODELS.get(model_id, {}).get('dimension', 1024)
         
         self.wait_time = 5
 
-        if not self.check_endpoint_exists(self.embedding_model_endpoint_name):
-            self.create_jumpstart_endpoint(model_id, self.embedding_model_endpoint_name)
+        if not SageMakerUtils.check_endpoint_exists(self.sagemaker_client, self.embedding_model_endpoint_name):
+            model_config = EMBEDDING_MODELS.get(model_id)
+            SageMakerUtils.create_jumpstart_endpoint(self.sagemaker_client, model_config.get("instance_type"), self.region, self.role, model_id, self.embedding_model_endpoint_name)
 
-        self.wait_for_endpoint_creation(self.embedding_model_endpoint_name)
+        SageMakerUtils.wait_for_endpoint_creation(self.sagemaker_client, self.embedding_model_endpoint_name)
         
         # Ensure the endpoint exists or create it if necessary
         # self._ensure_endpoint_exists()
@@ -102,168 +78,13 @@ class SageMakerEmbedder(BaseEmbedding):
         # Log initialization success
         logger.info(f"Initialized SageMakerEmbedder for model {model_id} in region {region}.")
 
-    
-    def check_endpoint_exists(self, endpoint_name):
-        sagemaker_client = boto3.client('sagemaker')
-        
-        try:
-            response = sagemaker_client.describe_endpoint(EndpointName=endpoint_name)
-            status = response['EndpointStatus']
-            print(f"Endpoint '{endpoint_name}' status: {status}")
-            return status == 'InService' or status == 'Creating'  # Returns True if InService, False otherwise
-
-        except ClientError as e:
-            error_code = e.response['Error']['Code']
-            
-            if error_code == 'ValidationException' and 'Could not find endpoint' in e.response['Error']['Message']:
-                print(f"Endpoint '{endpoint_name}' does not exist.")
-                return False  # Return False if the endpoint does not exist
-            
-            else:
-                # Re-raise unexpected exceptions
-                print(f"An unexpected error occurred: {e}")
-                raise
-
-    def create_jumpstart_endpoint(self, model_id: str, endpoint_name: str) -> bool:
-        """
-        Creates a SageMaker endpoint for JumpStart models.
-        Reuses existing model and endpoint configuration if available.
-
-        Args:
-            model_id (str): The model ID for the SageMaker JumpStart model.
-            endpoint_name (str): The name of the SageMaker endpoint to be created.
-
-        Returns:
-            bool: True if the endpoint is successfully created, False otherwise.
-        """
-        try:
-            model_config = EMBEDDING_MODELS.get(model_id)
-            if not model_config or model_config.get("model_source") != "jumpstart":
-                logger.error(f"Model ID '{model_id}' is not a valid JumpStart model.")
-                return False
-
-            boto_session = boto3.Session(region_name=self.region)
-            sagemaker_session = sagemaker.Session(boto_session=boto_session)
-
-            # Initialize JumpStart model
-            model = JumpStartModel(
-                role=self.role,
-                model_id=model_id,
-                sagemaker_session=sagemaker_session
-            )
-
-            # Check if the endpoint configuration exists
-            try:
-                self.sagemaker_client.describe_endpoint_config(
-                    EndpointConfigName=endpoint_name
-                )
-                logger.info(f"Endpoint configuration '{endpoint_name}' exists. Deploying endpoint.")
-
-                # Deploy the endpoint using the existing configuration
-                self.sagemaker_client.create_endpoint(
-                    EndpointName=endpoint_name,
-                    EndpointConfigName=endpoint_name
-                )
-            except self.sagemaker_client.exceptions.ClientError as e:
-                error_code = e.response['Error']['Code']
-                if error_code == 'ValidationException' and 'Could not find endpoint configuration' in e.response['Error']['Message']:
-                    logger.info(f"Endpoint configuration '{endpoint_name}' does not exist. Deploying using model.deploy().")
-
-                    # Use model.deploy to handle everything
-                    model.deploy(
-                        initial_instance_count=1,
-                        instance_type=model_config["instance_type"],
-                        endpoint_name=endpoint_name,
-                        accept_eula=True
-                    )
-                else:
-                    logger.error(f"Error while checking endpoint configuration: {e}")
-                    raise
-
-            logger.info(f"Successfully created endpoint '{endpoint_name}' for model '{model_id}'.")
-            return True
-
-        except self.sagemaker_client.exceptions.ResourceLimitExceeded as e:
-            logger.error(f"Resource limit exceeded while creating endpoint: {e}")
-            return False
-
-        except Exception as e:
-            logger.error(f"Error while creating endpoint '{endpoint_name}' for model '{model_id}': {e}")
-            return False
-
-    def wait_for_endpoint_creation(self, endpoint_name: str, wait_interval: int = 5, timeout: int = 100000) -> bool:
-        """
-        Waits until the SageMaker endpoint is created successfully.
-
-        Args:
-            endpoint_name (str): The name of the SageMaker endpoint.
-            wait_interval (int): Time (in seconds) to wait between status checks. Default is 30 seconds.
-            timeout (int): Maximum time (in seconds) to wait for the endpoint creation. Default is 1800 seconds (30 minutes).
-
-        Returns:
-            bool: True if the endpoint is successfully created and in service, False if timed out or failed.
-        """
-        import time
-
-        start_time = time.time()
-        logger.info(f"Waiting for endpoint '{endpoint_name}' to be in service...")
-
-        try:
-            while time.time() - start_time < timeout:
-                response = self.sagemaker_client.describe_endpoint(EndpointName=endpoint_name)
-                status = response["EndpointStatus"]
-
-                logger.info(f"Endpoint '{endpoint_name}' status: {status}")
-
-                if status == "InService":
-                    logger.info(f"Endpoint '{endpoint_name}' is now in service.")
-                    return True
-                elif status == "Failed":
-                    logger.error(f"Endpoint '{endpoint_name}' creation failed.")
-                    return False
-
-                logger.error(f"waiting for endpoint creating'{endpoint_name}' , status: {status}")
-                time.sleep(wait_interval)  # Wait before checking again
-
-            logger.error(f"Timeout while waiting for endpoint '{endpoint_name}' to be created.")
-            return False
-
-        except self.sagemaker_client.exceptions.ResourceNotFound:
-            logger.error(f"Endpoint '{endpoint_name}' not found. Ensure the creation process has started.")
-            return False
-
-        except Exception as e:
-            logger.error(f"Error while checking endpoint status for '{endpoint_name}': {e}")
-            return False
-    
     @abstractmethod
     def _prepare_chunk(self, chunk: Chunk) -> Dict:
         """
         Abstract method for preparing payload for SageMaker models.
         """
         pass
-
-    def _ensure_endpoint_exists(self):
-        """
-        Ensures that the SageMaker endpoint exists for the given model. If the endpoint does not exist,
-        it creates a new endpoint using the specified model ID.
-
-        Args:
-            model_id (str): The unique identifier for the model to use for the endpoint.
-
-        Raises:
-            ClientError: If there is an issue communicating with SageMaker or creating the endpoint.
-        """
-        
-        try:
-            # Check if the endpoint already exists
-            _ = self._check_model_status(self.embedding_model_endpoint_name, False)
-            logger.info(f"Endpoint {self.embedding_model_endpoint_name} already exists.")
-        except Exception as e:
-            # If the endpoint does not exist, create a new one
-            logger.info(f"Endpoint and configuration for {self.embedding_model_endpoint_name} does not exist. Creating endpoint.")
-            self.create_endpoint(endpoint_name=self.embedding_model_endpoint_name, model_id=self.embedding_model_id)
-            
+          
     def _check_model_status(self, endpoint_name, loop = True):
         """
         Check the status of the SageMaker endpoint and its configuration.
@@ -537,13 +358,3 @@ class SageMakerEmbedder(BaseEmbedding):
                     logger.error("Response content (raw): %s", response)
             raise
     
-    def _sanitize_name(self, name: str) -> str:
-        """Sanitize the endpoint name to follow AWS naming conventions"""
-        # Replace any character that's not alphanumeric or hyphen with hyphen
-        import re
-        name = re.sub(r'[^a-zA-Z0-9-]', '-', name)
-        # Ensure it starts with a letter
-        if not name[0].isalpha(): 
-            name = 'n' + name
-        # Truncate to 63 characters (AWS limit)
-        return name[:63]

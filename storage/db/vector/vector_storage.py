@@ -8,10 +8,10 @@ from embedding.embedding import BaseEmbedding
 @dataclass
 class VectorStorageSearchItem:
     text: str
-    execution_id: str = field(default_factory=None)
-    chunk_id: str = field(default_factory=None)
-    parent_id: str = field(default_factory=None)
-    vectors: List[float] = field(default_factory=[])
+    execution_id: Optional[str] = None
+    chunk_id: Optional[str] = None
+    parent_id: Optional[str] = None
+    vectors: List[float] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def to_json(self):

@@ -19,8 +19,9 @@ class GuardRailsVectorStorage(VectorStorage):
                     status=False,
                     metadata={
                         'guardrail_output': guardrail_response['outputs'][0]['text'],
-                        'guardrail_output_assessment': None, # TODO: need to add assesment
-                        'block_level': 'INPUT'
+                        'guardrail_input_assessment': guardrail_response.get('assessments', []),
+                        'block_level': 'INPUT',
+                        'guardrail_blocked': True
                     }
                 )
             
@@ -32,10 +33,13 @@ class GuardRailsVectorStorage(VectorStorage):
             if guardrail_response['action'] == 'GUARDRAIL_INTERVENED':
                 return VectorStorageSearchResponse(
                     status=False,
+                    result=results.result,
                     metadata={
                         'guardrail_output': guardrail_response['outputs'][0]['text'],
-                        'guardrail_output_assessment': None, # TODO: need to add assesment
-                        'block_level': 'CONTEXT'
+                        'guardrail_context_assessment': guardrail_response.get('assessments', []),
+                        'block_level': 'CONTEXT',
+                        'guardrail_blocked': True,
+                        'embedding_metadata': results.metadata['embedding_metadata'] if 'embedding_metadata' in results.metadata else {}
                     }
                 )
             

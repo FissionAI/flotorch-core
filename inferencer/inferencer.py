@@ -40,7 +40,8 @@ class BaseInferencer(ABC):
         """
         pass
 
-    def _generate_prompt(self, default_prompt: str, user_query: str, context: List[Dict]) -> str:
+    @abstractmethod
+    def generate_prompt(self, user_query: str, context: List[Dict]) -> str:
         """
         Construct a prompt for the inferencer based on the user query and context.
 
@@ -54,7 +55,8 @@ class BaseInferencer(ABC):
         """
         pass
 
-    def _format_context(self, context: List[Dict[str, str]]) -> str:
+    @abstractmethod
+    def format_context(self, context: List[Dict[str, str]]) -> str:
         """
         Format context documents into a single string for inclusion in the prompt.
 
@@ -64,10 +66,7 @@ class BaseInferencer(ABC):
         Returns:
             str: Formatted context as a single string.
         """
-        return "\n".join([
-            f"Context {i+1}:\n{doc.get('text', '')}"
-            for i, doc in enumerate(context)
-        ])
+        pass
 
     def _extract_response(self, response: Dict) -> str:
         """
