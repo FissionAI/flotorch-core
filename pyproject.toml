@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "FloTorch-core"
-version = "2.0.0"
+version = "2.1.0"
 description = "A Python project for FloTorch"
 authors = [
     { name = "Shiva Krishna", email = "shiva.krishnaah@gmail.com" }
