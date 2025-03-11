@@ -81,8 +81,9 @@ class BedrockInferencer(BaseInferencer):
         if self.n_shot_prompts < 0:
             raise ValueError("n_shot_prompts must be non-negative")
         
+        default_prompt = "You are a helpful assistant. Use the provided context to answer questions accurately. If you cannot find the answer in the context, say so"
         # Get system prompt
-        system_prompt = "" if not self.n_shot_prompt_guide_obj or not self.n_shot_prompt_guide_obj.get("system_prompt") else self.n_shot_prompt_guide_obj.get("system_prompt")
+        system_prompt = default_prompt if not self.n_shot_prompt_guide_obj or not self.n_shot_prompt_guide_obj.get("system_prompt") else self.n_shot_prompt_guide_obj.get("system_prompt")
         
         # Process context
         if context:

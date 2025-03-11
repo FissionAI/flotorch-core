@@ -33,7 +33,7 @@ class VectorStorageFactory:
         :param aws_region: AWS region for Bedrock Knowledge Base (Defaults to "us-east-1").
         :return: An instance of `VectorStorage` (either `OpenSearchClient` or `BedrockKnowledgeBaseStorage`).
         """
-        if knowledge_base:
+        if not knowledge_base:
             return NoOpsVectorStorage()
 
         if use_bedrock_kb:

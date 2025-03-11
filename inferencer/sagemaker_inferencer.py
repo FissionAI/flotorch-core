@@ -41,7 +41,7 @@ class SageMakerInferencer(BaseInferencer):
             if INFERENCER_MODELS[model_id]['model_source'] == 'jumpstart':
                 SageMakerUtils.create_jumpstart_endpoint(self.sagemaker_client, model_config.get("instance_type"), self.region_name, self.role, model_id, self.inferencing_model_endpoint_name)
             elif INFERENCER_MODELS[model_id]['model_source'] == 'huggingface':
-                SageMakerUtils.create_huggingface_endpoint(self.sagemaker_client, model_config.get("instance_type"), self.region_name, self.role, model_id, self.inferencing_model_endpoint_name)
+                SageMakerUtils.create_huggingface_endpoint(self.sagemaker_client, model_config.get("instance_type"), model_id, self.inferencing_model_endpoint_name, self.role, self.region_name)
 
         SageMakerUtils.wait_for_endpoint_creation(self.sagemaker_client, self.inferencing_model_endpoint_name)
 
@@ -157,13 +157,13 @@ class SageMakerInferencer(BaseInferencer):
         if self.n_shot_prompts < 0:
             raise ValueError("n_shot_prompt must be non-negative")
         
-        system_prompt = self.n_shot_prompt_guide_obj['system_prompt']
+        default_prompt = "You are a helpful assistant. Use the provided context to answer questions accurately. If you cannot find the answer in the context, say so"
+        # Get system prompt
+        system_prompt = default_prompt if not self.n_shot_prompt_guide_obj or not self.n_shot_prompt_guide_obj.get("system_prompt") else self.n_shot_prompt_guide_obj.get("system_prompt")
+        
+        context_text = self.format_context(user_query, context)
 
-        context_text = ""
-        if context:
-            context_text = self.format_context(user_query, context)
-
-        base_prompt = self.n_shot_prompt_guide_obj['user_prompt'] if 'user_prompt' in self.n_shot_prompt_guide_obj else ""
+        base_prompt = self.n_shot_prompt_guide_obj.get("user_prompt", "") if self.n_shot_prompt_guide_obj else ""
 
         if self.n_shot_prompts == 0:
             logger.info("into zero shot prompt")
@@ -204,21 +204,23 @@ class SageMakerInferencer(BaseInferencer):
     
     def format_context(self, user_query: str, context: List[Dict[str, str]]) -> str:
         """Format context documents into a single string."""
-        formatted_context = f"Search Query: {user_query}\n\nRelevant Passages:\n"
+        formatted_context = f"Search Query: {user_query}\n"
         
         try:
-            for i, item in enumerate(context, 1):
-                content = None
-                if 'text' in item:
-                    content = item['text']
-                elif '_source' in item and 'text' in item['_source']:
-                    content = item['_source']['text']
-                
-                if not content:
-                    continue
+            if context:
+                formatted_context += "\nRelevant Passages:\n"
+                for i, item in enumerate(context, 1):
+                    content = None
+                    if 'text' in item:
+                        content = item['text']
+                    elif '_source' in item and 'text' in item['_source']:
+                        content = item['_source']['text']
+                    
+                    if not content:
+                        continue
 
-                score = item.get('_score', 'N/A')
-                formatted_context += f"\nPassage {i} (Score: {score}):\n{content}\n"
+                    score = item.get('_score', 'N/A')
+                    formatted_context += f"\nPassage {i} (Score: {score}):\n{content}\n"
             return formatted_context
         except Exception as e:
             logger.error(f"Error formatting context: {str(e)}")

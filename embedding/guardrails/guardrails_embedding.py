@@ -21,15 +21,12 @@ class GuardrailsEmbedding(BaseEmbedding):
     :param chunk: The chunk to be embedded.
     :return: The embeddings.
     """
-    def embed(self, chunk: Chunk) -> Embeddings | None:
-        guardrail_response = self.base_guardrail.apply_guardrail(content=chunk.data)
-        # Exception what if we got ClientError from the above method
+    def embed(self, chunk: Chunk) -> Embeddings:
+        guardrail_response = self.base_guardrail.apply_guardrail(text=chunk.data)
         if guardrail_response['action'] == 'GUARDRAIL_INTERVENED':
-            # assessment = guardrail_response.get('assessments', [])
-            modified_text = ' '.join(output['text'] for output in guardrail_response['outputs'])
-            chunk.data = modified_text
-            return self.base_embedding.embed(chunk)
-        return None
+            return None
+
+        return self.base_embedding.embed(chunk)
 
     """
     Embeds the list of chunks.
