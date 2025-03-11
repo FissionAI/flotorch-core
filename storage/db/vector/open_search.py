@@ -81,11 +81,10 @@ class OpenSearchClient(VectorStorage):
                     }
                 }
             },
-            # "collapse": {"field": "parent_id"},  # Collapse the results by parent_id
             "_source": True,
             "fields": ["text", "parent_id"]
         }
         if hierarchical:
-            query["collapse"] = {"field": "parent_id"}
+            query["collapse"] = {"field": "parent_id.keyword"}
 
         return query

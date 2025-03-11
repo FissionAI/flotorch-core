@@ -1,7 +1,10 @@
+import json
 import boto3
 from botocore.exceptions import ClientError
 import sagemaker
 from sagemaker.jumpstart.model import JumpStartModel
+from sagemaker.huggingface import HuggingFaceModel, get_huggingface_llm_image_uri
+from sagemaker.session import Session
 
 from logger.global_logger import get_logger
 
@@ -155,59 +158,45 @@ class SageMakerUtils:
 
 
     @staticmethod
-    def create_huggingface_endpoint(sagemaker_client, instance_type, model_id: str, endpoint_name: str) -> bool:
+    def create_huggingface_endpoint(sagemaker_client, instance_type, model_id: str, endpoint_name: str, role: str, region_name: str) -> bool:
         """
         Creates a SageMaker endpoint for HuggingFace models.
-        Reuses existing model and endpoint configuration if available.
+        - If the endpoint config exists, it deploys using the existing configuration.
+        - If not, it does a full model deployment.
 
         Args:
-            model_id (str): The model ID for the SageMaker HuggingFace model.
-            endpoint_name (str): The name of the SageMaker endpoint to be created.
+            sagemaker_client (boto3.client): Boto3 SageMaker client.
+            instance_type (str): AWS instance type for deployment.
+            model_id (str): Hugging Face model ID.
+            endpoint_name (str): Name of the SageMaker endpoint.
+            role (str): IAM role for SageMaker execution.
+            region_name (str): AWS region.
 
         Returns:
             bool: True if the endpoint is successfully created, False otherwise.
         """
         try:
-            boto_session = boto3.Session()
-            sagemaker_session = sagemaker.Session(boto_session=boto_session)
-
-            # Initialize HuggingFace model
-            model = sagemaker.huggingface.HuggingFaceModel(
-                model_id=model_id,
-                sagemaker_session=sagemaker_session
+            session = Session(boto_session=boto3.Session(region_name=region_name))
+            hub = {
+                'HF_MODEL_ID': model_id,
+                'SM_NUM_GPUS': json.dumps(1)
+            }
+            huggingface_model = HuggingFaceModel(
+                image_uri=get_huggingface_llm_image_uri("huggingface", version="2.3.1", region=region_name),
+                env=hub,
+                role=role,
+                sagemaker_session = session 
             )
 
-            # Check if the endpoint configuration exists
-            try:
-                sagemaker_client.describe_endpoint_config(
-                    EndpointConfigName=endpoint_name
-                )
-                logger.info(f"Endpoint configuration '{endpoint_name}' exists. Deploying endpoint.")
-
-                # Deploy the endpoint using the existing configuration
-                sagemaker_client.create_endpoint(
-                    EndpointName=endpoint_name,
-                    EndpointConfigName=endpoint_name
-                )
-            except sagemaker_client.exceptions.ClientError as e:
-                error_code = e.response['Error']['Code']
-                if error_code == 'ValidationException' and 'Could not find endpoint configuration' in e.response['Error']['Message']:
-                    logger.info(f"Endpoint configuration '{endpoint_name}' does not exist. Deploying using model.deploy().")
-
-                    # Use model.deploy to handle everything
-                    model.deploy(
-                        initial_instance_count=1,
-                        instance_type=instance_type,
-                        endpoint_name=endpoint_name,
-                        accept_eula=True
-                    )
-                else:
-                    logger.error(f"Error while checking endpoint configuration: {e}")
-                    raise
-
-            logger.info(f"Successfully created endpoint '{endpoint_name}' for model '{model_id}'.")
-            return True
-
+            predictor = huggingface_model.deploy(
+                initial_instance_count=1,
+                instance_type=instance_type,
+                endpoint_name=endpoint_name,
+                container_startup_health_check_timeout=300,
+            )
+            
+            return predictor
+        
         except sagemaker_client.exceptions.ResourceLimitExceeded as e:
             logger.error(f"Resource limit exceeded while creating endpoint: {e}")
             return False
@@ -215,6 +204,7 @@ class SageMakerUtils:
         except Exception as e:
             logger.error(f"Error while creating endpoint '{endpoint_name}' for model '{model_id}': {e}")
             return False
+
         
         
     @staticmethod
