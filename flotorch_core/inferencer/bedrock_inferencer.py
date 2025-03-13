@@ -45,14 +45,14 @@ class BedrockInferencer(BaseInferencer):
                 "topP": 0.9
             }
             
-            is_titan_v1 = self.model_id in ("amazon.titan-text-express-v1", "amazon.titan-text-lite-v1")
+            skip_system_param = self.model_id in ("amazon.titan-text-express-v1", "amazon.titan-text-lite-v1", "mistral.mistral-7b-instruct-v0:2")
             request_params = {
                 "modelId": self.model_id,
-                "messages": ([self._prepare_conversation(role="user", message=system_prompt)] if is_titan_v1 else []) + messages,
+                "messages": ([self._prepare_conversation(role="user", message=system_prompt)] if skip_system_param else []) + messages,
                 "inferenceConfig": inference_config
             }
             
-            if not is_titan_v1:
+            if not skip_system_param:
                 request_params["system"] = [{"text": system_prompt}]
             
             response = self.client.converse(**request_params)
