@@ -33,7 +33,7 @@ def test_rerank_documents_success(mock_bedrock_client):
     """Tests reranking with valid inputs and mocked API response."""
     reranker = BedrockReranker(region="us-west-2", rerank_model_id="test-model", bedrock_client=mock_bedrock_client)
 
-    input_prompt = "Find relevant docs"
+    input_prompt = "Query"
     retrieved_documents = [{"text": "Doc1"}, {"text": "Doc2"}, {"text": "Doc3"}]
 
     # Mock response from Bedrock API
@@ -59,6 +59,23 @@ def test_rerank_documents_exception_handling(mock_bedrock_client):
     """Tests error handling when Bedrock API raises an exception."""
     reranker = BedrockReranker(region="us-west-2", rerank_model_id="test-model", bedrock_client=mock_bedrock_client)
     mock_bedrock_client.rerank.side_effect = Exception("Bedrock API error")
+
+    result = reranker.rerank_documents("query", [{"text": "Doc1"}])
+    assert result == []
+
+def test_rerank_documents_invalid_structure(mock_bedrock_client):
+    """Tests reranking with invalid document structure."""
+    reranker = BedrockReranker(region="us-west-2", rerank_model_id="test-model", bedrock_client=mock_bedrock_client)
+    invalid_documents = [{"invalid_key": "value"}]  # Missing "text" key
+
+    result = reranker.rerank_documents("query", invalid_documents)
+    assert result == []
+
+@patch("flotorch_core.rerank.rerank.boto3.client")
+def test_rerank_documents_invalid_api_response(mock_boto3_client):
+    """Tests reranking when API response is invalid."""
+    mock_boto3_client.return_value.rerank.return_value = {"invalid_key": "value"}  # Missing "results"
+    reranker = BedrockReranker(region="us-west-2", rerank_model_id="test-model", bedrock_client=mock_boto3_client)
 
     result = reranker.rerank_documents("query", [{"text": "Doc1"}])
     assert result == []
