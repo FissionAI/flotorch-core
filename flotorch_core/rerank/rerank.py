@@ -80,6 +80,6 @@ class BedrockReranker:
             return reranked_documents
 
         except Exception as e:
-            logger.exception(f"Unexpected error during reranking: {e}")
+            logger.error(f"Unexpected error during reranking: {e}")
 
         return []
