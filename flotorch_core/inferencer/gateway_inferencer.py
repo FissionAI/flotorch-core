@@ -16,6 +16,8 @@ class GatewayInferencer(BaseInferencer):
     def generate_prompt(self, user_query: str, context: List[Dict]) -> List[Dict[str, str]]:
         messages = []
 
+        messages.append({"role": "user", "content": user_query})
+
         default_prompt = "You are a helpful assistant. Use the provided context to answer questions accurately. If you cannot find the answer in the context, say so"
         
         system_prompt = (
@@ -23,16 +25,17 @@ class GatewayInferencer(BaseInferencer):
             if self.n_shot_prompt_guide_obj
             else default_prompt
         )
-        messages.append({"role": "system", "content": system_prompt})
+        # messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "assistant", "content": system_prompt})
 
         if context:
             context_text = self.format_context(context)
             if context_text:
-                messages.append({"role": "user", "content": context_text})
+                messages.append({"role": "assistant", "content": context_text})
 
         base_prompt = self.n_shot_prompt_guide_obj.get("user_prompt", "") if self.n_shot_prompt_guide_obj else ""
         if base_prompt:
-            messages.append({"role": "user", "content": base_prompt})
+            messages.append({"role": "assistant", "content": base_prompt})
 
         if self.n_shot_prompt_guide_obj:
             examples = self.n_shot_prompt_guide_obj.get("examples", [])
@@ -43,12 +46,12 @@ class GatewayInferencer(BaseInferencer):
             )
             for example in selected_examples:
                 if "example" in example:
-                    messages.append({"role": "user", "content": example["example"]})
+                    messages.append({"role": "assistant", "content": example["example"]})
                 elif "question" in example and "answer" in example:
-                    messages.append({"role": "user", "content": example["question"]})
+                    messages.append({"role": "assistant", "content": example["question"]})
                     messages.append({"role": "assistant", "content": example["answer"]})
 
-        messages.append({"role": "user", "content": user_query})
+        
 
         return messages
 
@@ -69,7 +72,10 @@ class GatewayInferencer(BaseInferencer):
 
 
     def format_context(self, context: List[Dict[str, str]]) -> str:
-        raise NotImplementedError("Subclasses must implement format_context")
+        """
+        Format context into a string to be included in the prompt.
+        """
+        return "\n".join([f"Context {i+1}:\n{item['text']}" for i, item in enumerate(context)])
     
     def _extract_metadata(self, response):
         return {
