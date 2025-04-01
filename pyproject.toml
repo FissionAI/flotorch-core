@@ -19,7 +19,7 @@ dependencies = [
     "PyPDF2==3.0.1",
     "opensearch-py==2.8.0",
     "sagemaker==2.235.2",
-    "openai"="^1.0.0"
+    "openai"="1.57.4"
 ]
 
 [project.optional-dependencies]
