@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "FloTorch-core"
 
-version = "2.6.0"
+version = "2.7.0"
 
 description = "A Python project for FloTorch"
 authors = [
@@ -18,7 +18,8 @@ dependencies = [
     "ollama==0.4.6",
     "PyPDF2==3.0.1",
     "opensearch-py==2.8.0",
-    "sagemaker==2.235.2"
+    "sagemaker==2.235.2",
+    "openai"="^1.0.0"
 ]
 
 [project.optional-dependencies]
