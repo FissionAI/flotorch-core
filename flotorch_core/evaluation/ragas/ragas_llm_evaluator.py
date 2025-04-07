@@ -12,7 +12,7 @@ logger.setLevel(logging.INFO)
 
 class RagasLLMEvaluator(BaseEvaluator):
     def __init__(self, region:str, temperature: float, knowledge_base: bool, eval_embedding_model: str, eval_retrieval_model: str):
-        super().__init__() # TODO is this required?
+        super().__init__()
         self.region = region
         self.temperature = temperature
         self.knowledge_base = knowledge_base
