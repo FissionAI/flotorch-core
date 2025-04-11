@@ -51,7 +51,7 @@ class GatewayInferencer(BaseInferencer):
                     messages.append({"role": "assistant", "content": example["question"]})
                     messages.append({"role": "assistant", "content": example["answer"]})
 
-        
+        messages.append({"role": "user", "content": "Please answer the above query."})
 
         return messages
 
@@ -63,6 +63,8 @@ class GatewayInferencer(BaseInferencer):
             model=self.model_id,
             messages=messages
         )
+
+
         end_time = time.time()
 
         metadata = self._extract_metadata(response)
