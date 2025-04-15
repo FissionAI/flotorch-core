@@ -2,7 +2,6 @@ from typing import List, Dict
 import logging
 import time
 import random
-from config.experimental_config import ExperimentalConfig
 from .sagemaker_inferencer import SageMakerInferencer
 
 logger = logging.getLogger()
