@@ -75,11 +75,6 @@ INFERENCER_MODELS = {
     }
 }
 
-class ServiceType(str, Enum):
-    BEDROCK = "bedrock"
-    SAGEMAKER = "sagemaker"
-    
-
 class SageMakerUtils:
     @staticmethod
     def check_endpoint_exists(sagemaker_client, endpoint_name):        
