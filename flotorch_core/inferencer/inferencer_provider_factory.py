@@ -6,6 +6,7 @@ from flotorch_core.inferencer.gateway_inferencer import GatewayInferencer
 from flotorch_core.inferencer.inferencer import BaseInferencer
 from flotorch_core.inferencer.sagemaker_inferencer import SageMakerInferencer
 from flotorch_core.inferencer.llama_inferencer import LlamaInferencer
+from flotorch_core.utils.sagemaker_utils import ServiceType
 
 
 class InferencerProviderFactory:
@@ -23,9 +24,9 @@ class InferencerProviderFactory:
                 n_shot_prompt_guide_obj=n_shot_prompt_guide_obj
             )
         
-        if service == "bedrock":
+        if service == ServiceType.BEDROCK:
             return BedrockInferencer(model_id, region, n_shot_prompts, temperature, n_shot_prompt_guide_obj)
-        elif service == "sagemaker":
+        elif service == ServiceType.SAGEMAKER:
             if model_id.startswith("meta-vlm-llama-4"):
                 return LlamaInferencer(model_id, region, arn_role, n_shot_prompts, temperature, n_shot_prompt_guide_obj)
             else:

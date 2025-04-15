@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Tuple, Any
 import logging
 import time
 import random
@@ -21,7 +21,7 @@ class LlamaInferencer(SageMakerInferencer):
             }
         return conversation
     
-    def generate_prompt(self, user_query: str, context: List[Dict]) -> str:
+    def generate_prompt(self, user_query: str, context: List[Dict]) -> Tuple[str, List[Dict[str, Any]]]:
         # Input validation
         if self.n_shot_prompts < 0:
             raise ValueError("n_shot_prompt must be non-negative")
@@ -99,7 +99,7 @@ class LlamaInferencer(SageMakerInferencer):
         
         return payload
     
-    def parse_response(self, response: dict) -> str:
+    def _extract_response(self, response: dict) -> str:
         """
         Parses the response from the model and extracts the generated text.
 

@@ -69,7 +69,7 @@ class SageMakerInferencer(BaseInferencer):
             response = self.inferencing_predictor.predict(payload)
             latency = int((time.time() - start_time) * 1000)
 
-            generated_text = self.parse_response(response)
+            generated_text = self._extract_response(response)
             
             if "The final answer is:" in generated_text:
                 answer = generated_text.split("The final answer is:")[1].strip()
@@ -138,7 +138,7 @@ class SageMakerInferencer(BaseInferencer):
 
         return cleaned_text.strip()            
 
-    def generate_prompt(self, user_query: str, context: List[Dict]) -> str:
+    def generate_prompt(self, user_query: str, context: List[Dict]) -> Tuple[str, List[Dict[str, Any]]]:
         if self.n_shot_prompts < 0:
             raise ValueError("n_shot_prompt must be non-negative")
         
@@ -236,7 +236,7 @@ class SageMakerInferencer(BaseInferencer):
         
         return payload
     
-    def parse_response(self, response: dict) -> str:
+    def _extract_response(self, response: dict) -> str:
         """
         Parses the response from the model and extracts the generated text.
 

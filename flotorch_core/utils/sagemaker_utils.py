@@ -1,6 +1,7 @@
 import json
 import boto3
 from botocore.exceptions import ClientError
+from enum import Enum
 import sagemaker
 from sagemaker.jumpstart.model import JumpStartModel
 from sagemaker.huggingface import HuggingFaceModel, get_huggingface_llm_image_uri
@@ -74,6 +75,10 @@ INFERENCER_MODELS = {
     }
 }
 
+class ServiceType(str, Enum):
+    BEDROCK = "bedrock"
+    SAGEMAKER = "sagemaker"
+    
 
 class SageMakerUtils:
     @staticmethod
