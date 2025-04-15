@@ -60,31 +60,16 @@ class SageMakerInferencer(BaseInferencer):
         if not self.inferencing_predictor:
             raise ValueError("Generation predictor not initialized")
         
-        prompt = self.generate_prompt(user_query, context)
+        system_prompt, prompt = self.generate_prompt(user_query, context)
 
-        default_params = {
-            "max_new_tokens": 256,
-            "temperature": self.temperature,
-            "top_p": 0.9,
-            "do_sample": True
-        }
-
-        payload = {
-            "inputs": prompt,
-            "parameters": default_params
-        }
+        payload = self.construct_payload(system_prompt, prompt)
 
         try:
             start_time = time.time()
             response = self.inferencing_predictor.predict(payload)
             latency = int((time.time() - start_time) * 1000)
 
-            if isinstance(response, list):
-                generated_text = response[0].get('generated_text', '') if response else ''
-            elif isinstance(response, dict):
-                generated_text = response.get('generated_text', '')
-            else:
-                raise ValueError(f"Unexpected response format: {type(response)}")
+            generated_text = self.parse_response(response)
             
             if "The final answer is:" in generated_text:
                 answer = generated_text.split("The final answer is:")[1].strip()
@@ -173,10 +158,10 @@ class SageMakerInferencer(BaseInferencer):
                     Query: {user_query}
                     Search Results: {context_text}
                     Summary:"""
-                return prompt
+                return None, prompt
             
             prompt = f"Human: {system_prompt}\n\n{context_text}\n\n{base_prompt}\n\nAssistant: The final answer is:"
-            return prompt.strip()
+            return None, prompt.strip()
         
         examples = self.n_shot_prompt_guide_obj['examples']
         selected_examples = (random.sample(examples, self.n_shot_prompts) 
@@ -197,7 +182,7 @@ class SageMakerInferencer(BaseInferencer):
                 Search Results: {context_text}
                 Summary:"""
                 
-            return prompt
+            return None, prompt
         
         prompt = f"Human: {system_prompt}\n\nFew examples:\n{example_text}\n{context_text}\n\n{base_prompt}\n\nAssistant: The final answer is:"
         return prompt.strip()
@@ -226,3 +211,43 @@ class SageMakerInferencer(BaseInferencer):
             logger.error(f"Error formatting context: {str(e)}")
             formatted_context += "Error processing context"
             return formatted_context
+        
+    def construct_payload(self, system_prompt: str, prompt: str) -> dict:
+        """
+        Constructs the payload dictionary for model inference with the given prompts and default parameters.
+        
+        Args:
+            system_prompt (str): The system-level prompt that guides the model's behavior
+            prompt (str): The actual prompt/query to be sent to the model
+
+        """
+        # Define default parameters for controlling the model's text generation
+        default_params = {
+            "max_new_tokens": 256,
+            "temperature": self.temperature,
+            "top_p": 0.9,
+            "do_sample": True
+            }
+        # Construct the complete payload with prompt and generation parameters
+        payload = {
+            "inputs": prompt,
+            "parameters": default_params
+            }
+        
+        return payload
+    
+    def parse_response(self, response: dict) -> str:
+        """
+        Parses the response from the model and extracts the generated text.
+
+        Args:
+            response (dict): The raw response from the model
+        """
+        # Handle different response formats (Falcon vs Llama)
+        if isinstance(response, list):
+            # Falcon-style response: Retrieve generated text from the list
+            return response[0].get('generated_text', '') if response else ''
+        elif isinstance(response, dict):
+            return response.get('generated_text', '')
+        else:
+            raise ValueError(f"Unexpected response format: {type(response)}")
