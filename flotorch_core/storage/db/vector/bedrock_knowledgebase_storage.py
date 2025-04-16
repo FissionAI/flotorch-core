@@ -52,8 +52,10 @@ class BedrockKnowledgeBaseStorage(VectorStorage):
             content = result.get('content', {})
             text = content.get('text', '')
 
-            if text:
-                formatted_results.append(VectorStorageSearchItem(text=text))
+            # Add strip() to remove whitespace and check if the result is non-empty
+            if text and isinstance(text, str) and text.strip():
+                formatted_results.append(VectorStorageSearchItem(text=text.strip()))
+
 
         return formatted_results
 

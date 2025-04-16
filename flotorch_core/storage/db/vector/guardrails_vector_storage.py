@@ -25,7 +25,7 @@ class GuardRailsVectorStorage(VectorStorage):
                     }
                 )
             
-            results = self.vectorStorage.search(chunk, knn, hierarchical)
+        results = self.vectorStorage.search(chunk, knn, hierarchical)
 
         if self.apply_context:
             result_text = ' '.join(record.text for record in results.result)
