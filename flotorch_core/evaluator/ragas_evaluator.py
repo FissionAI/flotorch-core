@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from flotorch_core.chunking.chunking import Chunk
 from flotorch_core.embedding.embedding import BaseEmbedding
@@ -12,8 +12,10 @@ from langchain.embeddings.base import Embeddings
 from ragas.embeddings import LangchainEmbeddingsWrapper
 from ragas.llms import LangchainLLMWrapper
 from langchain_core.language_models.base import LanguageModelLike
+from langchain_core.outputs.generation import Generation
 from ragas.evaluation import evaluate
 from ragas.dataset_schema import SingleTurnSample, EvaluationDataset
+from langchain_core.outputs import LLMResult
 
 
 from langchain_openai import OpenAIEmbeddings
@@ -24,9 +26,10 @@ class RagasEvaluator(BaseEvaluator):
     """
     Evaluator that uses RAGAS metrics to score RAG-based QA performance.
     """
-    def __init__(self, evaluator_llm: BaseInferencer, embedding_llm: BaseEmbedding):
+    def __init__(self, evaluator_llm: BaseInferencer, embedding_llm: BaseEmbedding, metric_args: dict = None):
         self.evaluator_llm = evaluator_llm
         self.embedding_llm = embedding_llm
+        self.metric_args = metric_args
 
         # TODO: wrap with internal class which extends base class which ragas uses for llm, then pass those in the below metrics instead
         class _EmbeddingWrapper(Embeddings):
@@ -61,13 +64,47 @@ class RagasEvaluator(BaseEvaluator):
                 """
                 # Run the sync method in an async wrapper
                 return await asyncio.to_thread(self.invoke, prompt)
-            
+        
+            def generate_prompt(self, prompts: List[str], **kwargs: Any,):
+                """
+                Sync implementation for prompt generation
+                """
+                responses = []
+                for prompt in prompts:
+                    metadata, response = self.internal_llm.generate_text(
+                        user_query=prompt.text, 
+                        context=[]
+                    )
+                    responses.append(response)
+                
+                return LLMResult(generations=[[Generation(text=resp)] for resp in responses])
+
+            async def agenerate_prompt(self, prompts: List[str], **kwargs: Any,) -> LLMResult:
+                loop = asyncio.get_event_loop()
+                futures = []
+                
+                for prompt in prompts:
+                    futures.append(
+                        loop.run_in_executor(
+                            None, 
+                            self.internal_llm.generate_text,
+                            prompt.text,
+                            []
+                        )
+                    )
+                    
+                results = await asyncio.gather(*futures)
+                responses = [resp[1] for resp in results]
+                
+                return LLMResult(generations=[[Generation(text=resp)] for resp in responses])
+        
         wrapped_embedding = LangchainEmbeddingsWrapper(_EmbeddingWrapper(self.embedding_llm))
         wrapped_evaluator_llm = LangchainLLMWrapper(_LLMWrapper(self.evaluator_llm))
         
         RagasEvaluationMetrics.initialize_metrics(
             llm=wrapped_evaluator_llm,
-            embeddings=wrapped_embedding
+            embeddings=wrapped_embedding,
+            metric_args=self.metric_args
         )
 
 
@@ -87,13 +124,15 @@ class RagasEvaluator(BaseEvaluator):
             sample_params = {
                 "user_input": item.question,
                 "response": item.generated_answer,
-                "reference": item.expected_answer,
+                "reference": item.gt_answer,
             }
-            if item.context:
-                sample_params["retrieved_contexts"] = item.context
+            if item.reference_contexts:
+                sample_params["retrieved_contexts"] = item.reference_contexts
 
             answer_samples.append(SingleTurnSample(**sample_params))
 
         evaluation_dataset = EvaluationDataset(answer_samples)
 
         result = evaluate(evaluation_dataset, selected_metrics)
+        
+        return result
