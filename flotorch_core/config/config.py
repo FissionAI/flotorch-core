@@ -115,3 +115,12 @@ class Config:
         if not sagemaker_arn_role:
             raise ValueError("sagemaker arn role is not set. Value not present in configuration")
         return sagemaker_arn_role
+    
+    def get_experimentid_index(self) -> str:
+        """
+        Retrieves the experiment ID index name from the configuration provider.
+        """
+        experiment_id_index = self.provider.get("experiment_question_metrics_experimentid_index")
+        if not experiment_id_index:
+            raise ValueError("experiment id index is not set. Value not present in configuration")
+        return experiment_id_index

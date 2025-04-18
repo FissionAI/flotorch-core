@@ -5,6 +5,7 @@ from flotorch_core.inferencer.bedrock_inferencer import BedrockInferencer
 from flotorch_core.inferencer.gateway_inferencer import GatewayInferencer
 from flotorch_core.inferencer.inferencer import BaseInferencer
 from flotorch_core.inferencer.sagemaker_inferencer import SageMakerInferencer
+from flotorch_core.inferencer.llama_inferencer import LlamaInferencer
 
 
 class InferencerProviderFactory:
@@ -22,9 +23,12 @@ class InferencerProviderFactory:
                 n_shot_prompt_guide_obj=n_shot_prompt_guide_obj
             )
         
-        if service == "bedrock":
+        if service == 'bedrock':
             return BedrockInferencer(model_id, region, n_shot_prompts, temperature, n_shot_prompt_guide_obj)
-        elif service == "sagemaker":
-            return SageMakerInferencer(model_id, region, arn_role, n_shot_prompts, temperature, n_shot_prompt_guide_obj)
+        elif service == 'sagemaker':
+            if model_id.startswith("meta-vlm-llama-4"):
+                return LlamaInferencer(model_id, region, arn_role, n_shot_prompts, temperature, n_shot_prompt_guide_obj)
+            else:
+                return SageMakerInferencer(model_id, region, arn_role, n_shot_prompts, temperature, n_shot_prompt_guide_obj)
         else:
             raise ValueError(f"Unsupported service scheme: {service}")

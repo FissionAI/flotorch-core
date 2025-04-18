@@ -15,28 +15,17 @@ class GatewayInferencer(BaseInferencer):
 
     def generate_prompt(self, user_query: str, context: List[Dict]) -> List[Dict[str, str]]:
         messages = []
-
-        messages.append({"role": "user", "content": user_query})
-
-        default_prompt = "You are a helpful assistant. Use the provided context to answer questions accurately. If you cannot find the answer in the context, say so"
         
+        # System prompt
+        default_prompt = "You are a helpful assistant. Use the provided context to answer questions accurately. If you cannot find the answer in the context, say so"
         system_prompt = (
             self.n_shot_prompt_guide_obj.get("system_prompt", default_prompt)
             if self.n_shot_prompt_guide_obj
             else default_prompt
         )
-        # messages.append({"role": "system", "content": system_prompt})
-        messages.append({"role": "assistant", "content": system_prompt})
+        messages.append({"role": "developer", "content": system_prompt})
 
-        if context:
-            context_text = self.format_context(context)
-            if context_text:
-                messages.append({"role": "assistant", "content": context_text})
-
-        base_prompt = self.n_shot_prompt_guide_obj.get("user_prompt", "") if self.n_shot_prompt_guide_obj else ""
-        if base_prompt:
-            messages.append({"role": "assistant", "content": base_prompt})
-
+        # Nshot examples
         if self.n_shot_prompt_guide_obj:
             examples = self.n_shot_prompt_guide_obj.get("examples", [])
             selected_examples = (
@@ -48,11 +37,21 @@ class GatewayInferencer(BaseInferencer):
                 if "example" in example:
                     messages.append({"role": "assistant", "content": example["example"]})
                 elif "question" in example and "answer" in example:
-                    messages.append({"role": "assistant", "content": example["question"]})
+                    messages.append({"role": "user", "content": example["question"]})
                     messages.append({"role": "assistant", "content": example["answer"]})
+             
+        # Context
+        if context:
+            context_text = self.format_context(context)
+            if context_text:
+                messages.append({"role": "user", "content": context_text})
 
+        # User query and base prompt
+        base_prompt = self.n_shot_prompt_guide_obj.get("user_prompt", "") if self.n_shot_prompt_guide_obj else ""
+        # Combine base prompt with user query if base prompt is provided else use user query
+        query = base_prompt + "\n" + user_query if base_prompt else user_query
+        messages.append({"role": "user", "content": query})
         
-
         return messages
 
     def generate_text(self, user_query: str, context: List[Dict]) -> Tuple[Dict, str]:
@@ -63,6 +62,8 @@ class GatewayInferencer(BaseInferencer):
             model=self.model_id,
             messages=messages
         )
+
+
         end_time = time.time()
 
         metadata = self._extract_metadata(response)
