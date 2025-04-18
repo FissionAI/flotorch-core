@@ -16,22 +16,46 @@ from langchain_core.outputs.generation import Generation
 from ragas.evaluation import evaluate
 from ragas.dataset_schema import SingleTurnSample, EvaluationDataset
 from langchain_core.outputs import LLMResult
-
-
-from langchain_openai import OpenAIEmbeddings
+from itertools import chain
 
 from flotorch_core.inferencer.inferencer import BaseInferencer
 
 class RagasEvaluator(BaseEvaluator):
     """
     Evaluator that uses RAGAS metrics to score RAG-based QA performance.
+    Initializes the RagasEvaluator with the given LLM and embedding wrappers.
+
+    Args:
+        evaluator_llm: The LLM to be used by RAGAS metrics (wrapped in LangchainLLMWrapper).
+        embedding_llm: The embedding model to be used by RAGAS metrics (wrapped in LangchainEmbeddingsWrapper).
+        metric_args: Optional configuration for metrics requiring per-instance arguments.
+
+            Example:
+            {
+                MetricKey.ASPECT_CRITIC: {
+                    "maliciousness": {
+                        "name": "maliciousness",
+                        "definition": "Is the response harmful?"
+                    },
+                    "bias": {
+                        "name": "bias",
+                        "definition": "Is the response biased or discriminatory?"
+                    }
+                }
+            }
     """
-    def __init__(self, evaluator_llm: BaseInferencer, embedding_llm: BaseEmbedding, metric_args: dict = None):
+    def __init__(
+        self,
+        evaluator_llm: BaseInferencer,
+        embedding_llm: BaseEmbedding,
+        metric_args: Optional[
+            Dict[Union[str, MetricKey], Dict[str, Dict[str, str]]]
+        ] = None
+    ):
         self.evaluator_llm = evaluator_llm
         self.embedding_llm = embedding_llm
         self.metric_args = metric_args
 
-        # TODO: wrap with internal class which extends base class which ragas uses for llm, then pass those in the below metrics instead
         class _EmbeddingWrapper(Embeddings):
             def __init__(self, internal_embedding):
                 self.internal_embedding = internal_embedding
@@ -117,7 +141,9 @@ class RagasEvaluator(BaseEvaluator):
         if metrics is None:
             metrics = RagasEvaluationMetrics.available_metrics()
 
-        selected_metrics = [RagasEvaluationMetrics.get_metric(m) for m in metrics]
+        selected_metrics = list(chain.from_iterable(
+            RagasEvaluationMetrics.get_metric(m).values() for m in metrics
+        ))
 
         answer_samples = []
         for item in data:
