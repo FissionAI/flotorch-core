@@ -52,4 +52,44 @@ class DynamoDB(DBStorage):
         except ClientError as e:
             print(f"Error updating DynamoDB: {e}")
             return False
-    
+        
+    def query(self, key_condition_expression, expression_attribute_values=None, filter_expression=None, index_name=None):
+        """
+        Query items from DynamoDB table based on key condition expression
+        
+        Args:
+            key_condition_expression (str): Key condition expression for query
+            expression_attribute_values (dict, optional): Values for the expression
+            filter_expression (str, optional): Filter expression to apply
+            index_name (str, optional): Name of the index to query
+            
+        Returns:
+            List of items matching the query
+        """
+        try:
+            params = {
+                'KeyConditionExpression': key_condition_expression,
+            }
+
+            if expression_attribute_values:
+                params['ExpressionAttributeValues'] = expression_attribute_values
+
+            if filter_expression:
+                params['FilterExpression'] = filter_expression
+
+            if index_name:
+                params['IndexName'] = index_name
+
+            response = self.table.query(**params)
+            items = response.get('Items', [])
+
+            # Handle pagination if there are more results
+            while 'LastEvaluatedKey' in response:
+                params['ExclusiveStartKey'] = response['LastEvaluatedKey']
+                response = self.table.query(**params)
+                items.extend(response.get('Items', []))
+
+            return items
+        except ClientError as e:
+            print(f"Error querying DynamoDB: {e}")
+            return []
