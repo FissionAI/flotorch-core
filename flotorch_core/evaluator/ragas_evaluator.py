@@ -152,7 +152,7 @@ class RagasEvaluator(BaseEvaluator):
                 "response": item.generated_answer,
                 "reference": item.expected_answer,
             }
-            if item.reference_contexts:
+            if item.context:
                 sample_params["retrieved_contexts"] = item.context
 
             answer_samples.append(SingleTurnSample(**sample_params))
