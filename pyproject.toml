@@ -8,6 +8,7 @@ name = "FloTorch-core"
 version = "2.8.0"
 
 description = "A Python project for FloTorch"
+readme = { file = "README.md", content-type = "text/markdown" }
 authors = [
     { name = "Shiva Krishna", email = "shiva.krishnaah@gmail.com" }
 ]
