@@ -98,6 +98,15 @@ class Config:
             raise ValueError("experiment table name is not set. Value not present in configuration")
         return experiment_table_name
     
+    def get_execution_table_name(self) -> str:
+        """
+        Retrieves the execution table name from the configuration provider.
+        """
+        execution_table_name = self.provider.get("execution_table")
+        if not execution_table_name:
+            raise ValueError("execution table name is not set. Value not present in configuration")
+        return execution_table_name
+    
     def get_experiment_question_metrics_table(self) -> str:
         """
         Retrieves the experiment question metrics table name from the configuration provider.
