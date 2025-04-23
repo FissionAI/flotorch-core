@@ -76,7 +76,6 @@ class BedrockReranker:
                 for result in results if isinstance(result, dict) and "index" in result
             ]
 
-            logger.info(f"Successfully reranked {len(reranked_documents)} documents.")
             return reranked_documents
 
         except Exception as e:
