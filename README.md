@@ -6,11 +6,11 @@
 
 ## ✨ Features
 
-- 🔌 Unified LLM Gateway (OpenAI, Bedrock, Ollama, etc.)
-- 💻 Bedrock/sagemaker/gateway inferencer
-- 🧠 Embedding Models (Titan, Cohere, Bedrock)
 - 🧩 Text Chunking (Fixed-size, Hierarchical)
+- 🧠 Embedding Models (Titan, Cohere, Bedrock)
 - 🔍 Document Retrieval (OpenSearch + Vector Storage)
+- 💻 Bedrock/sagemaker/gateway inferencer
+- 🔌 Unified LLM Gateway (OpenAI, Bedrock, Ollama, etc.)
 - 📏 RAG Evaluation (RAGAS Metrics)
 - ☁️ AWS Integration (S3, DynamoDB, Lambda)
 - 🧢 Built-in Testing Support
