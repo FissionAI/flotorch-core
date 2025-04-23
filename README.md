@@ -156,7 +156,7 @@ inferencer = GuardRailsInferencer(inferencer, base_guardrails)
 📧 Email: shiva.krishnaah@gmail.com
 
 **Adil Raza**  
-📧 Email: adilraza.12345@gmail.com
+📧 Email: adilraza.9752@gmail.com
 
 ---
 
