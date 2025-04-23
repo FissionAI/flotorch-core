@@ -107,8 +107,6 @@ class BedrockInferencer(BaseInferencer):
                 messages.append(self._prepare_conversation(role="user", message=example['question']))
                 messages.append(self._prepare_conversation(role="assistant", message=example['answer']))
         
-        logger.info(f"Using {self.n_shot_prompts} shot prompt with {len(selected_examples)} examples")
-        
         # Add user query
         messages.append(self._prepare_conversation(role="user", message=user_query))
         

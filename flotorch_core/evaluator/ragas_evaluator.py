@@ -150,10 +150,10 @@ class RagasEvaluator(BaseEvaluator):
             sample_params = {
                 "user_input": item.question,
                 "response": item.generated_answer,
-                "reference": item.gt_answer,
+                "reference": item.expected_answer,
             }
-            if item.reference_contexts:
-                sample_params["retrieved_contexts"] = item.reference_contexts
+            if item.context:
+                sample_params["retrieved_contexts"] = item.context
 
             answer_samples.append(SingleTurnSample(**sample_params))
 
