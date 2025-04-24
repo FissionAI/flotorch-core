@@ -23,7 +23,7 @@ class GatewayInferencer(BaseInferencer):
             if self.n_shot_prompt_guide_obj
             else default_prompt
         )
-        messages.append({"role": "developer", "content": system_prompt})
+        messages.append({"role": "system", "content": system_prompt})
 
         # Nshot examples
         if self.n_shot_prompt_guide_obj:
