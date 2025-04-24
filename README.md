@@ -504,3 +504,24 @@ Follow the detailed steps provided in [instructions.md](./instructions.md).
     - Configuration variables
     - python file names
       Example: `example_snake_case`
+
+
+### Run unit test coverage and generate html report locally
+
+- First, install required packages for calculating the unit test coverage:
+
+    `pip install pytest pytest-cov coverage`
+
+- From the project root directory, run:
+
+    `coverage run -m pytest`
+
+- To see the report on the terminal, run:
+
+    `coverage report -m`
+
+- To generate html report, run:
+
+    `coverage html`
+    
+  open htmlcov/index.html
