@@ -190,11 +190,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 - GitHub: [https://github.com/FissionAI/flotorch-core](https://github.com/FissionAI/flotorch-core)
 
-- Use **snake_case** for:
-    - names
-    - Configuration variables
-    - python file names
-      Example: `example_snake_case`
-
-
 
