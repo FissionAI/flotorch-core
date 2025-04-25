@@ -1,6 +1,7 @@
 import json
 import boto3
 from botocore.exceptions import ClientError
+from enum import Enum
 import sagemaker
 from sagemaker.jumpstart.model import JumpStartModel
 from sagemaker.huggingface import HuggingFaceModel, get_huggingface_llm_image_uri
@@ -48,8 +49,11 @@ INFERENCER_MODELS = {
     "meta-textgeneration-llama-3-3-70b-instruct": {
         "model_source": "jumpstart",
         "instance_type": "ml.p4d.24xlarge"
-    }
-    ,
+    },
+    "meta-vlm-llama-4-scout-17b-16e-instruct": {
+        "model_source": "jumpstart",
+        "instance_type": "ml.p4d.24xlarge"
+    },
     "deepseek-ai/DeepSeek-R1-Distill-Llama-8B": {
         "model_source": "huggingface",
         "instance_type": "ml.g5.2xlarge"
@@ -70,7 +74,6 @@ INFERENCER_MODELS = {
         "instance_type": "ml.g6e.12xlarge"
     }
 }
-
 
 class SageMakerUtils:
     @staticmethod
