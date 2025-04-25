@@ -1,5 +1,4 @@
 import json
-from unittest import TestCase
 import pytest
 from unittest.mock import Mock
 from flotorch_core.reader.json_reader import JSONReader

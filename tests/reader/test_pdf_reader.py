@@ -2,8 +2,6 @@ import io
 import unittest
 from unittest.mock import Mock, patch
 
-import pytest
-from PyPDF2 import PdfReader
 
 from flotorch_core.storage.storage import StorageProvider
 # Fix the import path to match your project structure
