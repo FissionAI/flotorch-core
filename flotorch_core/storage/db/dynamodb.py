@@ -1,7 +1,7 @@
 import boto3
 from flotorch_core.storage.db.db_storage import DBStorage
 from botocore.exceptions import ClientError
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional, Union
 
 class DynamoDB(DBStorage):
     def __init__(self, table_name, region_name='us-east-1'):
@@ -16,11 +16,45 @@ class DynamoDB(DBStorage):
         except ClientError as e:
             print(f"Error writing to DynamoDB: {e}")
             return False
+        
+    def read(
+        self,
+        key: Optional[Dict[str, Any]] = None,
+        key_condition_expression: Optional[Any] = None,
+        expression_attribute_values: Optional[Dict[str, Any]] = None,
+        filter_expression: Optional[Any] = None,
+        index_name: Optional[str] = None
+    ) -> Union[dict, List[dict], None]:
 
-    def read(self, key) -> dict:
         try:
-            response = self.table.get_item(Key=key)
-            return response.get('Item', None)
+            if key is not None:
+                # Single item read
+                response = self.table.get_item(Key=key)
+                return response.get('Item', None)
+            elif key_condition_expression is not None:
+                # Query operation
+                params = {
+                    'KeyConditionExpression': key_condition_expression,
+                }
+                if expression_attribute_values:
+                    params['ExpressionAttributeValues'] = expression_attribute_values
+                if filter_expression:
+                    params['FilterExpression'] = filter_expression
+                if index_name:
+                    params['IndexName'] = index_name
+
+                response = self.table.query(**params)
+                items = response.get('Items', [])
+
+                # Handle pagination
+                while 'LastEvaluatedKey' in response:
+                    params['ExclusiveStartKey'] = response['LastEvaluatedKey']
+                    response = self.table.query(**params)
+                    items.extend(response.get('Items', []))
+
+                return items
+            else:
+                raise ValueError("Either 'key' or 'key_condition_expression' must be provided.")
         except ClientError as e:
             print(f"Error reading from DynamoDB: {e}")
             return None
@@ -52,4 +86,3 @@ class DynamoDB(DBStorage):
         except ClientError as e:
             print(f"Error updating DynamoDB: {e}")
             return False
-    
