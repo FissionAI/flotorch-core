@@ -133,3 +133,57 @@ class Config:
         if not experiment_id_index:
             raise ValueError("experiment id index is not set. Value not present in configuration")
         return experiment_id_index
+    
+    def get_postgress_db(self) -> str:
+        """
+        Retrieves the Postgres database name from the configuration provider.
+        """
+        postgres_db = self.provider.get("postgres_db_name")
+        if not postgres_db:
+            raise ValueError("Postgres database is not set. Value not present in configuration")
+        return postgres_db
+    
+    def get_postgress_user(self) -> str:
+        """
+        Retrieves the Postgres user from the configuration provider.
+        """
+        postgres_user = self.provider.get("postgres_user")
+        if not postgres_user:
+            raise ValueError("Postgres user is not set. Value not present in configuration")
+        return postgres_user
+    
+    def get_postgress_password(self) -> str:
+        """
+        Retrieves the Postgres password from the configuration provider.
+        """
+        postgres_password = self.provider.get("postgres_password")
+        if not postgres_password:
+            raise ValueError("Postgres password is not set. Value not present in configuration")
+        return postgres_password
+    
+    def get_postgress_host(self) -> str:
+        """
+        Retrieves the Postgres host from the configuration provider.
+        """
+        postgres_host = self.provider.get("postgres_host")
+        if not postgres_host:
+            raise ValueError("Postgres host is not set. Value not present in configuration")
+        return postgres_host
+
+    def get_postgress_port(self) -> int:
+        """
+        Retrieves the Postgres port from the configuration provider.
+        """
+        postgres_port = int(self.provider.get("postgres_port", 5432))
+        if not postgres_port:
+            raise ValueError("Postgres port is not set. Value not present in configuration")
+        return postgres_port
+    
+    def get_db_type(self) -> str:
+        """
+        Retrieves the database type from the configuration provider.
+        """
+        db_type = self.provider.get("db_type")
+        if not db_type:
+            raise ValueError("db type is not set. Value not present in configuration")
+        return db_type
