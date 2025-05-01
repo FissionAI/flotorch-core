@@ -1,7 +1,10 @@
 import boto3
 from flotorch_core.storage.db.db_storage import DBStorage
+from flotorch_core.logger.global_logger import get_logger
 from botocore.exceptions import ClientError
 from typing import List, Dict, Any
+
+logger = get_logger()
 
 class DynamoDB(DBStorage):
     def __init__(self, table_name, region_name='us-east-1'):
@@ -15,7 +18,7 @@ class DynamoDB(DBStorage):
             self.table.put_item(Item=item)
             return True
         except ClientError as e:
-            print(f"Error writing to DynamoDB: {e}")
+            logger.error(f"Error writing to DynamoDB: {e}")
             return False
 
     def read(self, keys: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -50,7 +53,7 @@ class DynamoDB(DBStorage):
 
             return items
         except ClientError as e:
-            print(f"Error reading from DynamoDB: {e}")
+            logger.error(f"Error reading from DynamoDB: {e}")
             return []
     
     def bulk_write(self, items: list):
@@ -78,6 +81,6 @@ class DynamoDB(DBStorage):
             )
             return True
         except ClientError as e:
-            print(f"Error updating DynamoDB: {e}")
+            logger.error(f"Error updating DynamoDB: {e}")
             return False
     
