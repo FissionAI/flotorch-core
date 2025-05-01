@@ -21,7 +21,8 @@ dependencies = [
     "opensearch-py==2.8.0",
     "sagemaker==2.235.2",
     "openai==1.57.4",
-    "ragas==0.2.14"
+    "ragas==0.2.14",
+    "psycopg2-binary==2.9.9"
 ]
 
 [project.optional-dependencies]
