@@ -44,7 +44,7 @@ class DynamoDB(DBStorage):
         Args:
             key (dict): The key of the item to be read from the table.
         Returns:
-            dict: The item read from the table, or None if not found.
+            list: A list of items matching the key. If no item is found, an empty list is returned.
         """
         try:
             if set(keys.keys()) == set(self.primary_key_fields):
