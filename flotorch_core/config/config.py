@@ -134,7 +134,7 @@ class Config:
             raise ValueError("experiment id index is not set. Value not present in configuration")
         return experiment_id_index
     
-    def get_postgress_db(self) -> str:
+    def get_postgres_db(self) -> str:
         """
         Retrieves the Postgres database name from the configuration provider.
         """
@@ -143,7 +143,7 @@ class Config:
             raise ValueError("Postgres database is not set. Value not present in configuration")
         return postgres_db
     
-    def get_postgress_user(self) -> str:
+    def get_postgres_user(self) -> str:
         """
         Retrieves the Postgres user from the configuration provider.
         """
@@ -152,7 +152,7 @@ class Config:
             raise ValueError("Postgres user is not set. Value not present in configuration")
         return postgres_user
     
-    def get_postgress_password(self) -> str:
+    def get_postgres_password(self) -> str:
         """
         Retrieves the Postgres password from the configuration provider.
         """
@@ -161,7 +161,7 @@ class Config:
             raise ValueError("Postgres password is not set. Value not present in configuration")
         return postgres_password
     
-    def get_postgress_host(self) -> str:
+    def get_postgres_host(self) -> str:
         """
         Retrieves the Postgres host from the configuration provider.
         """
@@ -170,7 +170,7 @@ class Config:
             raise ValueError("Postgres host is not set. Value not present in configuration")
         return postgres_host
 
-    def get_postgress_port(self) -> int:
+    def get_postgres_port(self) -> int:
         """
         Retrieves the Postgres port from the configuration provider.
         """
