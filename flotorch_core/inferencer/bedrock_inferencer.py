@@ -35,6 +35,11 @@ class BedrockInferencer(BaseInferencer):
     def generate_text(self, user_query: str, context: List[Dict] = None) -> Tuple[Dict[Any, Any], str]:
         """
         Generate a response based on the user query and context using Bedrock.
+        Args:
+            user_query (str): The user's query.
+            context (List[Dict]): Context documents to assist in generating the response.
+        Returns:
+            Tuple[Dict[Any, Any], str]: A tuple containing metadata and the generated response.
         """
         try:
             system_prompt, messages = self.generate_prompt(user_query, context)
@@ -73,6 +78,11 @@ class BedrockInferencer(BaseInferencer):
     def generate_prompt(self, user_query: str, context: List[Dict] = None) -> Tuple[str, List[Dict[str, Any]]]:
         """
         Construct a prompt for the Bedrock inferencer based on the user query and context.
+        Args:
+            user_query (str): The user's query.
+            context (List[Dict]): Context documents to assist in generating the response.
+        Returns:
+            Tuple[str, List[Dict[str, Any]]]: A tuple containing the system prompt and a list of messages.
         """
         messages = []
         context_text = ""
@@ -113,14 +123,27 @@ class BedrockInferencer(BaseInferencer):
         return system_prompt, messages
 
     def _prepare_conversation(self, message: str, role: str) -> Dict[str, Any]:
-        """Formats a message and role into a conversation dictionary."""
+        """
+        Formats a message and role into a conversation dictionary.
+        Args:
+            message (str): The message content.
+            role (str): The role of the message sender (e.g., "user", "assistant").
+        Returns:
+            Dict[str, Any]: A dictionary representing the conversation message.
+        """
         if not message or not role:
             logger.error("Error in parsing message or role")
         
         return {"role": role, "content": [{"text": message}]}
 
     def format_context(self, context: List[Dict[str, str]]) -> str:
-        """Format context documents into a single string."""
+        """
+        Format context documents into a single string.
+        Args:
+            context (List[Dict[str, str]]): List of context documents.
+        Returns:
+            str: Formatted context string.
+        """
         if not context or len(context) == 0:
             return ""
         

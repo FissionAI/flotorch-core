@@ -9,6 +9,12 @@ class StorageProviderFactory:
     """
     @staticmethod
     def create_storage_provider(uri: str) -> StorageProvider:
+        """
+        Create a storage provider based on the URI scheme.
+        Args:
+            uri (str): The URI to parse.
+        Returns:
+            StorageProvider: The storage provider instance."""
         parsed = urlparse(uri)
         if parsed.scheme == "s3":
             bucket = parsed.netloc
