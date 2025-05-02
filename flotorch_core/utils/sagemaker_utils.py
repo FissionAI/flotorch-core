@@ -76,8 +76,19 @@ INFERENCER_MODELS = {
 }
 
 class SageMakerUtils:
+    """
+    A utility class for managing SageMaker endpoints and models.
+    """
     @staticmethod
-    def check_endpoint_exists(sagemaker_client, endpoint_name):        
+    def check_endpoint_exists(sagemaker_client, endpoint_name):
+        """
+        Checks if a SageMaker endpoint exists and is in service.
+        Args:
+            sagemaker_client (boto3.client): Boto3 SageMaker client.
+            endpoint_name (str): The name of the SageMaker endpoint.
+        Returns:
+            bool: True if the endpoint exists and is in service, False otherwise.
+        """        
         try:
             response = sagemaker_client.describe_endpoint(EndpointName=endpoint_name)
             status = response['EndpointStatus']

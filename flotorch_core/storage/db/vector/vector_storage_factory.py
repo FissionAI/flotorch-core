@@ -6,6 +6,11 @@ from flotorch_core.embedding.embedding import BaseEmbedding
 from typing import Optional
 
 class VectorStorageFactory:
+    """
+    Factory class to create vector storage clients based on the provided parameters.
+    This class is responsible for instantiating the appropriate vector storage client
+    based on the configuration provided.
+    """
     @staticmethod
     def create_vector_storage(
         knowledge_base: bool,
@@ -22,16 +27,19 @@ class VectorStorageFactory:
         """
         Factory method to return the appropriate vector storage client.
 
-        :param use_bedrock_kb: Boolean flag to decide which storage to use.
-        :param embedding: The embedding model to use.
-        :param opensearch_host: OpenSearch host (Only needed for OpenSearch).
-        :param opensearch_port: OpenSearch port (Only needed for OpenSearch).
-        :param opensearch_username: OpenSearch username (Only needed for OpenSearch).
-        :param opensearch_password: OpenSearch password (Only needed for OpenSearch).
-        :param index_id: OpenSearch index ID (Only needed for OpenSearch).
-        :param knowledge_base_id: Bedrock Knowledge Base ID (Only needed for Bedrock KB).
-        :param aws_region: AWS region for Bedrock Knowledge Base (Defaults to "us-east-1").
-        :return: An instance of `VectorStorage` (either `OpenSearchClient` or `BedrockKnowledgeBaseStorage`).
+        Args:
+            knowledge_base (bool): Flag to indicate if a knowledge base is being used.
+            use_bedrock_kb (bool): Flag to decide which storage to use.
+            embedding (BaseEmbedding): The embedding model to be used for vector storage.
+            opensearch_host (Optional[str]): OpenSearch host (Only needed for OpenSearch).
+            opensearch_port (Optional[int]): OpenSearch port (Only needed for OpenSearch).
+            opensearch_username (Optional[str]): OpenSearch username (Only needed for OpenSearch).
+            opensearch_password (Optional[str]): OpenSearch password (Only needed for OpenSearch).
+            index_id (Optional[str]): OpenSearch index ID (Only needed for OpenSearch).
+            knowledge_base_id (Optional[str]): Bedrock Knowledge Base ID (Only needed for Bedrock KB).
+            aws_region (str): AWS region for Bedrock Knowledge Base (Defaults to "us-east-1").
+        Returns:
+            VectorStorage: An instance of `VectorStorage` (either `OpenSearchClient` or `BedrockKnowledgeBaseStorage`).
         """
         if not knowledge_base:
             return NoOpsVectorStorage()

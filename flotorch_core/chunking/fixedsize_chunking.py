@@ -8,10 +8,16 @@ from .chunking import BaseChunker, Chunk
 class FixedSizeChunker(BaseChunker):
     """
     This class is responsible for chunking the text into fixed size chunks.
-    :param chunk_size: The size of the chunk.
-    :param chunk_overlap: The overlap between chunks.
     """
     def __init__(self, chunk_size: int, chunk_overlap: int):
+        """
+        Initializes the FixedSizeChunker with the given chunk size and overlap.
+        Args:
+            chunk_size (int): The size of each chunk.
+            chunk_overlap (int): The overlap between consecutive chunks.
+        Returns:
+            None
+        """
         super().__init__()
         self.chunk_size = self.tokens_per_charecter * chunk_size
         self.chunk_overlap = int(chunk_overlap * self.chunk_size / 100)
@@ -20,11 +26,15 @@ class FixedSizeChunker(BaseChunker):
         if self.chunk_overlap >= self.chunk_size:
             raise ValueError("chunk_overlap must be less than chunk_size")
 
-    """
-    Chunks the text into fixed size chunks.
-    :param data: The input text.
-    :return: The list of chunks."""
+    
     def chunk(self, data: str) -> List[Chunk]:
+        """
+        Chunks the text into fixed size chunks.
+        Args:
+            data (str): The text to be chunked.
+        Returns:
+            List[Chunk]: A list of Chunk objects representing the chunked text.
+        """
         if not data:
             raise ValueError("Input text cannot be empty or None")
 

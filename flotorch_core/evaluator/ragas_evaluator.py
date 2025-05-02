@@ -23,26 +23,6 @@ from flotorch_core.inferencer.inferencer import BaseInferencer
 class RagasEvaluator(BaseEvaluator):
     """
     Evaluator that uses RAGAS metrics to score RAG-based QA performance.
-    Initializes the RagasEvaluator with the given LLM and embedding wrappers.
-
-    Args:
-        evaluator_llm: The LLM to be used by RAGAS metrics (wrapped in LangchainLLMWrapper).
-        embedding_llm: The embedding model to be used by RAGAS metrics (wrapped in LangchainEmbeddingsWrapper).
-        metric_args: Optional configuration for metrics requiring per-instance arguments.
-
-            Example:
-            {
-                MetricKey.ASPECT_CRITIC: {
-                    "maliciousness": {
-                        "name": "maliciousness",
-                        "definition": "Is the response harmful?"
-                    },
-                    "bias": {
-                        "name": "bias",
-                        "definition": "Is the response biased or discriminatory?"
-                    }
-                }
-            }
     """
     def __init__(
         self,
@@ -52,32 +32,93 @@ class RagasEvaluator(BaseEvaluator):
             Dict[Union[str, MetricKey], Dict[str, Dict[str, str]]]
         ] = None
     ):
+        """
+        Initializes the RagasEvaluator with the given LLM and embedding wrappers.
+
+        Args:
+            evaluator_llm: The LLM to be used by RAGAS metrics (wrapped in LangchainLLMWrapper).
+            embedding_llm: The embedding model to be used by RAGAS metrics (wrapped in LangchainEmbeddingsWrapper).
+            metric_args: Optional configuration for metrics requiring per-instance arguments.
+
+                Example:
+                {
+                    MetricKey.ASPECT_CRITIC: {
+                        "maliciousness": {
+                            "name": "maliciousness",
+                            "definition": "Is the response harmful?"
+                        },
+                        "bias": {
+                            "name": "bias",
+                            "definition": "Is the response biased or discriminatory?"
+                        }
+                    }
+                }
+        """
         self.evaluator_llm = evaluator_llm
         self.embedding_llm = embedding_llm
         self.metric_args = metric_args
 
         class _EmbeddingWrapper(Embeddings):
+            """
+            This is a wrapper for the embedding model to be used with RAGAS.
+            """
             def __init__(self, internal_embedding):
+                """
+                Args:
+                    internal_embedding: The embedding model to be used.
+                """
                 self.internal_embedding = internal_embedding
 
             def embed_documents(self, texts: list[str]) -> list[list[float]]:
+                """
+                Embeds a list of documents (texts) using the internal embedding model.
+                Args:
+                    texts: A list of strings to be embedded.
+                Returns:
+                    A list of lists of floats, where each inner list is the embedding for a document.
+                """
                 return [self._embed_text(text) for text in texts]
 
             def embed_query(self, text: str) -> list[float]:
+                """
+                Embeds a single query (text) using the internal embedding model.
+                Args:
+                    text: A string to be embedded.
+                Returns:
+                    A list of floats representing the embedding for the query.
+                """
                 return self._embed_text(text)
 
             def _embed_text(self, text: str) -> list[float]:
+                """
+                Embeds a single text using the internal embedding model.
+                Args:
+                    text: A string to be embedded.
+                Returns:
+                    A list of floats representing the embedding for the text.
+                """
                 chunk = Chunk(data=text)
                 embedding = self.internal_embedding.embed(chunk)
                 return embedding.embeddings[0]
             
         class _LLMWrapper(LanguageModelLike):
+            """
+            This is a wrapper for the LLM to be used with RAGAS.
+            """
             def __init__(self, internal_llm: BaseInferencer):
+                """
+                Args:
+                    internal_llm: The LLM to be used.
+                """
                 self.internal_llm = internal_llm
 
             def invoke(self, prompt: str) -> str:
                 """
                 This mimics LangChain's ChatOpenAI behavior.
+                Args:
+                    prompt: The prompt to be sent to the LLM.
+                Returns:
+                    The response from the LLM.
                 """
                 metadata, response = self.internal_llm.generate_text(user_query=prompt, context=[])
                 return response
@@ -85,6 +126,10 @@ class RagasEvaluator(BaseEvaluator):
             async def ainvoke(self, prompt: str) -> str:
                 """
                 Async interface — RAGAS prefers this if available.
+                Args:
+                    prompt: The prompt to be sent to the LLM.
+                Returns:
+                    The response from the LLM.
                 """
                 # Run the sync method in an async wrapper
                 return await asyncio.to_thread(self.invoke, prompt)
@@ -92,6 +137,11 @@ class RagasEvaluator(BaseEvaluator):
             def generate_prompt(self, prompts: List[str], **kwargs: Any,):
                 """
                 Sync implementation for prompt generation
+                Args:
+                    prompts: A list of prompts to be sent to the LLM.
+                    kwargs: Additional arguments for the LLM.
+                Returns:
+                    LLMResult: The result of the LLM generation.
                 """
                 responses = []
                 for prompt in prompts:
@@ -104,6 +154,14 @@ class RagasEvaluator(BaseEvaluator):
                 return LLMResult(generations=[[Generation(text=resp)] for resp in responses])
 
             async def agenerate_prompt(self, prompts: List[str], **kwargs: Any,) -> LLMResult:
+                """
+                Async implementation for prompt generation
+                Args:
+                    prompts: A list of prompts to be sent to the LLM.
+                    kwargs: Additional arguments for the LLM.
+                Returns:
+                    LLMResult: The result of the LLM generation.
+                """
                 loop = asyncio.get_event_loop()
                 futures = []
                 
@@ -137,6 +195,14 @@ class RagasEvaluator(BaseEvaluator):
         data: List[EvaluationItem],
         metrics: Optional[List[MetricKey]] = None
     ) -> Dict[str, Any]:
+        """
+        Evaluates the provided data using RAGAS metrics.
+        Args:
+            data: A list of EvaluationItem objects containing the data to be evaluated.
+            metrics: Optional list of metrics to be used for evaluation. If None, all available metrics are used.
+        Returns:
+            A dictionary containing the evaluation results for each metric.
+        """
         # example to fetch metrics, use like this
         if metrics is None:
             metrics = RagasEvaluationMetrics.available_metrics()

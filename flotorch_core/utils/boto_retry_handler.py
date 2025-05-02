@@ -18,16 +18,33 @@ class BotoRetryHandler(ABC):
     @property
     @abstractmethod
     def retry_params(self) -> RetryParams:
+        """Returns the retry parameters"""
         pass
     
     @property
     @abstractmethod
     def retryable_errors(self) -> set[str]:
+        """Returns a set of retryable error codes"""
         pass
         
         
     def __call__(self, func):
+        """
+        Decorator to handle retries for AWS SDK calls.
+        Args:
+            func: The function to be decorated.
+        Returns:
+            A wrapper function that handles retries.
+        """
         def wrapper(*args, **kwargs):
+            """
+            Wrapper function to handle retries.
+            Args:
+                *args: Positional arguments for the function.
+                **kwargs: Keyword arguments for the function.
+            Returns:
+                The result of the function call.
+            """
             retries = 0
             retry_params = self.retry_params
             while retries < retry_params.max_retries:

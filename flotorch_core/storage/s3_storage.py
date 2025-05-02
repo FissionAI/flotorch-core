@@ -30,6 +30,13 @@ class S3StorageProvider(StorageProvider):
         self.s3_client = s3_client
 
     def get_path(self, uri: str) -> str:
+        """
+        Extracts the path from the given S3 URI.
+        Args:
+            uri (str): The S3 URI.
+        Returns:
+            str: The path extracted from the S3 URI.
+        """
         parsed = urlparse(uri)
         return parsed.path.lstrip("/")
 

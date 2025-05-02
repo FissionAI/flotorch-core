@@ -7,7 +7,24 @@ from flotorch_core.chunking.fixedsize_chunking import FixedSizeChunker
 
 
 class HieraricalChunker(FixedSizeChunker):
+    """
+    This class is used to chunk text into smaller pieces using a hierarchical approach.
+    It first splits the text into larger chunks and then further splits those chunks into smaller ones.
+    The class inherits from the FixedSizeChunker class and uses the CharacterTextSplitter from langchain.
+    The chunking process is done in two steps:
+    1. The text is split into larger chunks using the parent chunk size.
+    2. Each of those larger chunks is then split into smaller chunks using the child chunk size.
+    """
     def __init__(self, chunk_size: int, chunk_overlap: int, parent_chunk_size: int):
+        """
+        Initialize the HieraricalChunker with chunk size, overlap, and parent chunk size.
+        Args:
+            chunk_size (int): The size of the child chunks.
+            chunk_overlap (int): The overlap between child chunks.
+            parent_chunk_size (int): The size of the parent chunks.
+        Returns:
+            None
+        """
         super().__init__(chunk_size, chunk_overlap)
         self.parent_chunk_size = self.tokens_per_charecter * parent_chunk_size
         if self.parent_chunk_size <= 0:
@@ -16,6 +33,13 @@ class HieraricalChunker(FixedSizeChunker):
             raise ValueError("child_chunk_size must be less than parent chunking size")
 
     def chunk(self, data: str) -> List[Chunk]:
+        """
+        Chunk the input text into smaller pieces using a hierarchical approach.
+        Args:
+            data (str): The input text to be chunked.
+        Returns:
+            List[Chunk]: A list of Chunk objects representing the chunked text.
+        """
         if not data:
             raise ValueError("Input text cannot be empty or None")
 

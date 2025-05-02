@@ -53,6 +53,11 @@ class RagasEvaluationMetrics(BaseEvaluationMetric):
 
     @classmethod
     def available_metrics(cls) -> list[str]:
+        """
+        Returns a list of available metrics.
+        Returns:
+            list[str]: A list of metric keys.
+        """
         return list(cls._initialized_metrics.keys())
 
     @classmethod

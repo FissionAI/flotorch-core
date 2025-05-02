@@ -11,25 +11,39 @@ This class is responsible for embedding the text using the Cohere model.
 @register("cohere.embed-english-v3")
 class CohereEmbedding(BedRockEmbedding):
     """
-    Initializes the CohereEmbedding class.
-    :param model_id: The model id of the Cohere model.
-    :param region: The region of the Cohere model.
-    :param dimensions: The dimensions of the embedding.
-    :param normalize: Normalize the embedding.
+    CohereEmbedding class for embedding text using Cohere models.
     """
 
     def __init__(self, model_id: str, region: str, dimensions: int = 256, normalize: bool = True) -> None:
+        """
+        Initializes the CohereEmbedding class.
+        Args:
+            model_id (str): The model ID for the Cohere model.
+            region (str): The region for the Cohere model.
+            dimensions (int): The dimensions of the embedding. Default is 256.
+            normalize (bool): Whether to normalize the embedding. Default is True.
+        Returns:
+            None
+        """
         super().__init__(model_id, region, dimensions, normalize)
-
-    """
-    Prepares the chunk for embedding.
-    :param chunk: The chunk to be embedded.
-    :return: The prepared chunk.
-    """
     
     def _prepare_chunk(self, chunk: Chunk) -> Dict:
+        """
+        Prepares the chunk for embedding.
+        Args:
+            chunk (Chunk): The chunk to be embedded.
+        Returns:
+            Dict: A dictionary containing the chunk data and input type.
+        """
         return {"texts": [chunk.data], "input_type": "search_document"}
     
     def extract_embedding(self, response: Dict[str, Any]) -> List[float]:
+        """
+        Extracts the embedding from the response.
+        Args:
+            response (Dict[str, Any]): The response from the embedding model.
+        Returns:
+            List[float]: The extracted embedding.
+        """
         return response["embeddings"][0]
 

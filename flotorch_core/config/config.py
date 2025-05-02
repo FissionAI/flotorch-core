@@ -29,6 +29,10 @@ class Config:
     def get_opensearch_host(self) -> str:
         """
         Retrieves the OpenSearch host from the configuration provider.
+        Returns:
+            str: The OpenSearch host.
+        Raises:
+            ValueError: If the OpenSearch host is not set.
         """
         open_search_host = self.provider.get("OPENSEARCH_HOST", "localhost")
         if not open_search_host:
@@ -38,6 +42,10 @@ class Config:
     def get_opensearch_port(self) -> int:
         """
         Retrieves the OpenSearch port from the configuration provider.
+        Returns:
+            int: The OpenSearch port.
+        Raises:
+            ValueError: If the OpenSearch port is not set.
         """
         open_search_port = int(self.provider.get("OPENSEARCH_PORT", 443))
         if not open_search_port:
@@ -47,6 +55,10 @@ class Config:
     def get_opensearch_username(self) -> str:
         """
         Retrieves the OpenSearch username from the configuration provider.
+        Returns:
+            str: The OpenSearch username.
+        Raises:
+            ValueError: If the OpenSearch username is not set.
         """
         open_search_username = self.provider.get("OPENSEARCH_USERNAME")
         if not open_search_username:
@@ -56,6 +68,10 @@ class Config:
     def get_opensearch_password(self) -> str:
         """
         Retrieves the OpenSearch password from the configuration provider.
+        Returns:
+            str: The OpenSearch password.
+        Raises:
+            ValueError: If the OpenSearch password is not set.
         """
         open_search_password = self.provider.get("OPENSEARCH_PASSWORD")
         if not open_search_password:
@@ -65,6 +81,10 @@ class Config:
     def get_opensearch_index(self) -> str:
         """
         Retrieves the OpenSearch index name from the configuration provider.
+        Returns:
+            str: The OpenSearch index name.
+        Raises:
+            ValueError: If the OpenSearch index name is not set.
         """
         open_search_index = self.provider.get("OPENSEARCH_INDEX")
         if not open_search_index:
@@ -74,6 +94,10 @@ class Config:
     def get_task_token(self) -> str:
         """
         Retrieves the task token from the configuration provider.
+        Returns:
+            str: The task token.
+        Raises:
+            ValueError: If the task token is not set.
         """
         task_token = self.provider.get("TASK_TOKEN")
         if not task_token:
@@ -83,6 +107,10 @@ class Config:
     def get_fargate_input_data(self) -> str:
         """
         Retrieves the input data for fargate handlers from the configuration provider.
+        Returns:
+            str: The input data for fargate handlers.
+        Raises:
+            ValueError: If the input data is not set.
         """
         input_data = self.provider.get("INPUT_DATA", {})
         if not input_data:
@@ -92,6 +120,10 @@ class Config:
     def get_experiment_table_name(self) -> str:
         """
         Retrieves the experiment table name from the configuration provider.
+        Returns:
+            str: The experiment table name.
+        Raises:
+            ValueError: If the experiment table name is not set.
         """
         experiment_table_name = self.provider.get("experiment_table")
         if not experiment_table_name:
@@ -101,6 +133,10 @@ class Config:
     def get_execution_table_name(self) -> str:
         """
         Retrieves the execution table name from the configuration provider.
+        Returns:
+            str: The execution table name.
+        Raises:
+            ValueError: If the execution table name is not set.
         """
         execution_table_name = self.provider.get("execution_table")
         if not execution_table_name:
@@ -110,6 +146,10 @@ class Config:
     def get_experiment_question_metrics_table(self) -> str:
         """
         Retrieves the experiment question metrics table name from the configuration provider.
+        Returns:
+            str: The experiment question metrics table name.
+        Raises:
+            ValueError: If the experiment question metrics table name is not set.
         """
         experiment_question_metrics_table = self.provider.get("experiment_question_metrics_table")
         if not experiment_question_metrics_table:
@@ -119,6 +159,10 @@ class Config:
     def get_sagemaker_arn_role(self) -> str:
         """
         Retrieves the SageMaker ARN role from the configuration provider.
+        Returns:
+            str: The SageMaker ARN role.
+        Raises:
+            ValueError: If the SageMaker ARN role is not set.
         """
         sagemaker_arn_role = self.provider.get("sagemaker_role_arn")
         if not sagemaker_arn_role:
@@ -128,6 +172,10 @@ class Config:
     def get_experimentid_index(self) -> str:
         """
         Retrieves the experiment ID index name from the configuration provider.
+        Returns:
+            str: The experiment ID index name.
+        Raises:
+            ValueError: If the experiment ID index name is not set.
         """
         experiment_id_index = self.provider.get("experiment_question_metrics_experimentid_index")
         if not experiment_id_index:

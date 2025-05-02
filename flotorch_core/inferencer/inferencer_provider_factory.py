@@ -14,6 +14,22 @@ class InferencerProviderFactory:
     """
     @staticmethod
     def create_inferencer_provider(gateway_enabled: bool, base_url: str, api_key: str, service: str, model_id: str, region: str, arn_role: str, n_shot_prompts: int = 0, temperature: float = 0.7, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None) -> BaseInferencer:
+        """
+        Create an inferencer provider based on the service name.
+        Args:
+            gateway_enabled (bool): Whether to use the gateway.
+            base_url (str): The base URL for the gateway.
+            api_key (str): The API key for the gateway.
+            service (str): The service name (e.g., 'bedrock', 'sagemaker').
+            model_id (str): The model ID.
+            region (str): The AWS region.
+            arn_role (str): The ARN role for SageMaker.
+            n_shot_prompts (int): Number of shot prompts.
+            temperature (float): Temperature for sampling.
+            n_shot_prompt_guide_obj (Dict[str, List[Dict[str, str]]]): N-shot prompt guide object.
+        Returns:
+            BaseInferencer: An instance of the appropriate inferencer.
+        """
         if gateway_enabled:
             return GatewayInferencer(
                 model_id=model_id, 

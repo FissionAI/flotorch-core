@@ -4,24 +4,41 @@ from typing import List, Dict
 
 from flotorch_core.chunking.chunking import Chunk
 
-"""
-This class is responsible for embedding the text using the Llama model.
-"""
+
 class EmbeddingMetadata:
     """
-    Initializes the EmbeddingMetadata class.
-    :param input_tokens: The number of input tokens.
-    :param latency_ms: The latency in milliseconds.
+    This class is responsible for embedding the text using the Llama model.
     """
+   
     def __init__(self, input_tokens: int, latency_ms: int):
+        """
+        Initializes the EmbeddingMetadata class.
+        Args:
+            input_tokens (int): The number of input tokens.
+            latency_ms (int): The latency in milliseconds.
+        Returns:
+            None
+        """
         self.input_tokens = input_tokens
         self.latency_ms = latency_ms
     
     def append(self, metadata: 'EmbeddingMetadata'):
+        """
+        Appends the metadata of another EmbeddingMetadata object to this one.
+        Args:
+            metadata (EmbeddingMetadata): The metadata to append.
+        Returns:
+            None
+        """
         self.input_tokens += int(metadata.input_tokens)
         self.latency_ms += int(metadata.latency_ms)
 
     def to_json(self):
+        """
+        Converts the metadata to JSON format.
+        Returns:
+            dict: The metadata in JSON format.
+        """
         return {
             'input_token': self.input_tokens,
             'latency_ms': self.latency_ms
@@ -30,11 +47,18 @@ class EmbeddingMetadata:
 
 class Embeddings:
     """
-    Initializes the Embeddings class.
-    :param embeddings: The embeddings.
-    :param metadata: The metadata.
-    """
+    This class is responsible for embedding the text"""
+    
     def __init__(self, embeddings: List[List[float]], metadata: EmbeddingMetadata, text: str):
+        """
+        Initializes the Embeddings class.
+        Args:
+            embeddings (List[List[float]]): The embeddings of the text.
+            metadata (EmbeddingMetadata): The metadata of the embeddings.
+            text (str): The original text.
+        Returns:
+            None
+        """
         self.embeddings = embeddings
         self.metadata = metadata
         self.text = text
@@ -63,6 +87,11 @@ class Embeddings:
         return text.strip()
 
     def to_json(self) -> Dict:
+        """
+        Converts the embeddings to JSON format.
+        Returns:
+            dict: The embeddings in JSON format.
+        """
         return {
             "vectors": self.embeddings,
             "text": self.clean_text_for_vector_db(self.text),
@@ -73,54 +102,82 @@ class Embeddings:
         }
 
 class EmbeddingList:
+    """
+    This class is responsible for creating a list of embeddings."""
+
     def __init__(self):
+        """
+        Initializes the EmbeddingList class.
+        """
         self.embeddings: List[Embeddings] = []
         self.metadata = EmbeddingMetadata(0, 0)
 
     def append(self, embeddings: Embeddings):
+        """
+        Appends the embeddings to the list.
+        Args:
+            embeddings (Embeddings): The embeddings to append.
+        Returns:
+            None
+        """
         self.embeddings.append(embeddings)
         self.metadata.append(embeddings.metadata)
 
-"""
-This class is responsible for embedding the text."""
+
 class BaseEmbedding(ABC):
     """
-    Initializes the BaseEmbedding class.
-    :param dimensions: The dimensions of the embedding.
-    :param normalize: Normalize the embedding.
+    This is the base class for all embedding models
     """
 
     def __init__(self,  model_id: str, region: str, dimensions: int = 256, normalize: bool = True) -> None:
+        """
+        Initializes the BaseEmbedding class.
+        Args:
+            model_id (str): The ID of the model.
+            region (str): The region of the model.
+            dimensions (int): The dimensions of the embeddings.
+            normalize (bool): Whether to normalize the embeddings.
+        Returns:
+            None
+        """
         super().__init__()
         self.model_id = model_id
         self.region = region
         self.dimension = dimensions
         self.normalize = normalize
-
-    """
-    Prepares the chunk for embedding.
-    :param chunk: The chunk to be embedded.
-    :return: The prepared chunk.
-    """
+    
     @abstractmethod
     def _prepare_chunk(self, chunk: Chunk) -> Dict:
+        """
+        Prepares the chunk for embedding.
+        Args:
+            chunk (Chunk): The chunk to be prepared.
+        Returns:
+            The prepared chunk.
+        """
         pass
 
-    """
-    Embeds the chunk.
-    :param chunk: The chunk to be embedded.
-    :return: The embeddings.
-    """
+    
     @abstractmethod
     def embed(self, chunk: Chunk) -> Embeddings:
+        """
+        Embeds the chunk.
+        Args:
+            chunk (Chunk): The chunk to be embedded.
+        Returns:
+            The prepared chunk.
+        """
         pass
 
-    """
-    Embeds the list of chunks.
-    :param chunks: The list of chunks to be embedded.
-    :return: The list of embeddings.
-    """
+    
     def embed_list(self, chunks: List[Chunk]) -> EmbeddingList:
+        """
+        Embeds the list of chunks.
+        Args:
+            chunks (List[Chunk]): The list of chunks to be embedded.
+        Returns:
+            EmbeddingList: The list of embeddings.
+        """
         embedding_list = EmbeddingList()
         if not isinstance(chunks, list):
             return embedding_list.append(self.embed(chunks))
