@@ -5,6 +5,7 @@ from ragas.metrics import (
     ResponseRelevancy,
     LLMContextPrecisionWithReference,
     AspectCritic,
+    SemanticSimilarity
 )
 
 from flotorch_core.evaluator.metrics.base_metrics import BaseEvaluationMetric
@@ -32,8 +33,12 @@ class RagasEvaluationMetrics(BaseEvaluationMetric):
         },
         MetricKey.ANSWER_RELEVANCE: {
             "class": ResponseRelevancy,
-            "requires": ["llm", "embeddings"]
+            "requires": ["embeddings"]
         },
+        MetricKey.ANSWER_SIMILARITY: {
+        "class": SemanticSimilarity,
+        "requires": [ "embeddings"]
+        }
     }
 
     """
