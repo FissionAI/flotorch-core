@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import List, Optional
+from dataclasses import dataclass, field
+from typing import List
 
 
 @dataclass
@@ -10,4 +10,4 @@ class EvaluationItem:
     question: str
     generated_answer: str
     expected_answer: str
-    context: Optional[List[str]] = None
+    context: List[str] = field(default_factory=list)
