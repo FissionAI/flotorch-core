@@ -116,6 +116,15 @@ class Config:
             raise ValueError("experiment question metrics table name is not set. Value not present in configuration")
         return experiment_question_metrics_table
     
+    def get_execution_model_invocations_table(self) -> str:
+        """
+        Retrieves the execution model invocations table name from the configuration provider.
+        """
+        execution_model_invocations_table = self.provider.get("execution_model_invocations_table")
+        if not execution_model_invocations_table:
+            raise ValueError("execution model invocations table name is not set. Value not present in configuration")
+        return execution_model_invocations_table
+    
     def get_sagemaker_arn_role(self) -> str:
         """
         Retrieves the SageMaker ARN role from the configuration provider.
