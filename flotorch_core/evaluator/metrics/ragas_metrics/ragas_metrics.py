@@ -33,9 +33,9 @@ class RagasEvaluationMetrics(BaseEvaluationMetric):
         },
         MetricKey.ANSWER_RELEVANCE: {
             "class": ResponseRelevancy,
-            "requires": ["embeddings"]
+            "requires": ["llm","embeddings"]
         },
-        MetricKey.ANSWER_SIMILARITY: {
+        MetricKey.SEMANTIC_SIMILARITY: {
         "class": SemanticSimilarity,
         "requires": [ "embeddings"]
         }
