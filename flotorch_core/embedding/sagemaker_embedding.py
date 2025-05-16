@@ -291,15 +291,37 @@ class SageMakerEmbedder(BaseEmbedding):
             logger.error(f"Model ID {model_id} is not recognized as an embedding or inferencing model.")
 
     def _invoke_model(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Invokes the SageMaker model with the given payload and returns the response.
+        Args:
+            payload (Dict[str, Any]): The input data to be sent to the model.
+        Returns:
+            Dict[str, Any]: The response from the model.
+        """
         return self.embedding_predictor.predict(payload)
     
     def _extract_metadata(self, chunk: Chunk, latency: int) -> EmbeddingMetadata:
+        """
+        Extracts metadata from the embedding process, including input tokens and latency.
+        Args:
+            chunk (Chunk): The input chunk of data.
+            latency (int): The time taken for the embedding process in milliseconds.
+        Returns:
+            EmbeddingMetadata: Metadata object containing input tokens and latency.
+        """
         return EmbeddingMetadata(
             input_tokens = len(chunk.data) // 4,
             latency_ms = latency
         )
     
     def _parse_model_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Parses the model response to extract the embedding vector.
+        Args:
+            response (Dict[str, Any]): The response from the model.
+        Returns:
+            Dict[str, Any]: The parsed embedding vector.
+        """
         # If the response is in byte format, decode it
         if isinstance(response, (bytes, bytearray)):
             response = json.loads(response.decode('utf-8'))
@@ -329,6 +351,13 @@ class SageMakerEmbedder(BaseEmbedding):
         return embedding.tolist()
 
     def embed(self, chunk: Chunk) -> Embeddings:
+        """
+        Generates an embedding for the given chunk of text using the SageMaker model.
+        Args:
+            chunk (Chunk): The input chunk of text to be embedded.
+        Returns:
+            Embeddings: An object containing the generated embedding and metadata.
+        """
         if not self.predictor:
             raise ValueError("Embedding predictor not initialized")
 

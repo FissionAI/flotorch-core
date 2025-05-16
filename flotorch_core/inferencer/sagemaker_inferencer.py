@@ -57,6 +57,14 @@ class SageMakerInferencer(BaseInferencer):
         self.inferencing_predictor = self.predictor
 
     def generate_text(self, user_query: str, context: List[Dict]) -> Tuple[Dict[Any, Any], str]:
+        """
+        Generates text based on the user query and context using the SageMaker model.
+        Args:
+            user_query (str): The user's query or input text.
+            context (List[Dict]): The context or additional information to guide the generation.
+        Returns:
+            Tuple[Dict[Any, Any], str]: A tuple containing metadata about the generated text and the generated text itself.
+        """
         if not self.inferencing_predictor:
             raise ValueError("Generation predictor not initialized")
         
@@ -139,6 +147,14 @@ class SageMakerInferencer(BaseInferencer):
         return cleaned_text.strip()            
 
     def generate_prompt(self, user_query: str, context: List[Dict]) -> Tuple[str, List[Dict[str, Any]]]:
+        """
+        Generates a prompt for the model based on the user query and context.
+        Args:
+            user_query (str): The user's query or input text.
+            context (List[Dict]): The context or additional information to guide the generation.
+        Returns:
+            Tuple[str, List[Dict[str, Any]]]: A tuple containing the system prompt and the generated prompt.
+        """
         if self.n_shot_prompts < 0:
             raise ValueError("n_shot_prompt must be non-negative")
         
@@ -188,7 +204,14 @@ class SageMakerInferencer(BaseInferencer):
         return prompt.strip()
     
     def format_context(self, user_query: str, context: List[Dict[str, str]]) -> str:
-        """Format context documents into a single string."""
+        """
+        Format context documents into a single string.
+        Args:
+            user_query (str): The user's query or input text.
+            context (List[Dict[str, str]]): The context or additional information to guide the generation.
+        Returns:
+            str: The formatted context string.
+        """
         formatted_context = f"Search Query: {user_query}\n"
         
         try:
@@ -219,6 +242,8 @@ class SageMakerInferencer(BaseInferencer):
         Args:
             system_prompt (str): The system-level prompt that guides the model's behavior
             prompt (str): The actual prompt/query to be sent to the model
+        Returns:
+            dict: The payload dictionary containing the prompts and parameters for the model
 
         """
         # Define default parameters for controlling the model's text generation
@@ -242,6 +267,8 @@ class SageMakerInferencer(BaseInferencer):
 
         Args:
             response (dict): The raw response from the model
+        Returns:
+            str: The generated text extracted from the response
         """
         # Handle different response formats (Falcon vs Llama)
         if isinstance(response, list):
