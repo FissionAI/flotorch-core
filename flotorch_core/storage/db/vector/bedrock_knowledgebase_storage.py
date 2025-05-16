@@ -50,10 +50,11 @@ class BedrockKnowledgeBaseStorage(VectorStorage):
         formatted_results = []
         for result in data.get('retrievalResults', []):
             content = result.get('content', {})
+            metadata=result.get('location',{})
             text = content.get('text', '')
 
             if text:
-                formatted_results.append(VectorStorageSearchItem(text=text))
+                formatted_results.append(VectorStorageSearchItem(text=text,metadata=metadata))
 
         return formatted_results
 

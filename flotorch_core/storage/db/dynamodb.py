@@ -1,8 +1,9 @@
 import boto3
 from flotorch_core.storage.db.db_storage import DBStorage
 from flotorch_core.logger.global_logger import get_logger
+from flotorch_core.storage.db.db_utils import _serialize_data
 from botocore.exceptions import ClientError
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 logger = get_logger()
 
@@ -15,25 +16,49 @@ class DynamoDB(DBStorage):
 
     def write(self, item: dict):
         try:
-            self.table.put_item(Item=item)
+            serialized_data = self._serialize_data(item)
+            self.table.put_item(Item=serialized_data)
             return True
         except ClientError as e:
             logger.error(f"Error writing to DynamoDB: {e}")
             return False
 
-    def read(self, keys: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def read(self, keys: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        items = []
         try:
+            if not keys:
+                logger.info("No key provided, retrieving all items.")
+                response = self.table.scan()
+                items.extend(response.get('Items', []))
+
+                # Handle pagination if more results exist
+                while 'LastEvaluatedKey' in response:
+                    response = self.table.scan(
+                        ExclusiveStartKey=response['LastEvaluatedKey']
+                    )
+                    items.extend(response.get('Items', []))
+                return items
+
+            # If keys are provided, retrieved based on it
             if set(keys.keys()) == set(self.primary_key_fields):
                 response = self.table.get_item(Key=keys)
                 item = response.get('Item', None)
                 return [item] if item else []
 
             # Fallback to scan with filters using pagination
-            filter_expression = " AND ".join(f"#{k} = :{k}" for k in keys)
-            expression_values = {f":{k}": v for k, v in keys.items()}
-            expression_names = {f"#{k}": k for k in keys}
+            filter_expression_parts = []
+            expression_values = {}
+            expression_names = {}
 
-            items = []
+            for k, v in keys.items():
+                placeholder_key = f"#k_{k}" 
+                placeholder_value = f":v_{k}"
+                filter_expression_parts.append(f"{placeholder_key} = {placeholder_value}")
+                expression_names[placeholder_key] = k
+                expression_values[placeholder_value] = v
+            
+            filter_expression = " AND ".join(filter_expression_parts)
+
             response = self.table.scan(
                 FilterExpression=filter_expression,
                 ExpressionAttributeNames=expression_names,
@@ -54,6 +79,9 @@ class DynamoDB(DBStorage):
             return items
         except ClientError as e:
             logger.error(f"Error reading from DynamoDB: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"An unexpected error occurred: {e}")
             return []
     
     def bulk_write(self, items: list):
@@ -83,4 +111,14 @@ class DynamoDB(DBStorage):
         except ClientError as e:
             logger.error(f"Error updating DynamoDB: {e}")
             return False
-    
+        
+    def delete(self, key: Dict[str, Any]) -> bool:
+        try:
+            response = self.table.delete_item(
+                Key=key,
+            )
+            logger.info(f"Item with key {key} deleted successfully.")
+            return True
+        except ClientError as e:
+            logger.error(f"Error deleting item with key {key} from DynamoDB: {e}")
+            return False        
