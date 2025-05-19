@@ -5,3 +5,4 @@ class MetricKey(str, Enum):
     ASPECT_CRITIC = "aspect_critic"
     FAITHFULNESS = "faithfulness"
     ANSWER_RELEVANCE = "answer_relevance"
+    SEMANTIC_SIMILARITY="semantic_similarity"
