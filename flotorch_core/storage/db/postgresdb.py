@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from flotorch_core.storage.db.db_storage import DBStorage
-from flotorch_core.storage.db.db_utils import _prepare_item_for_write
+from flotorch_core.utils.db_utils import DBUtils
 from typing import List, Dict, Any, Optional
 from flotorch_core.logger.global_logger import get_logger
 
@@ -37,7 +37,7 @@ class PostgresDB(DBStorage):
         if not self.conn:
             return False
         
-        item = _prepare_item_for_write(item)
+        item = DBUtils.prepare_item_for_write(item)
         columns = ", ".join([f'"{k}"' for k in item.keys()])
         values = ", ".join([f"%({k})s" for k in item.keys()])
         query = f"INSERT INTO {self.table} ({columns}) VALUES ({values}) ON CONFLICT DO NOTHING"
