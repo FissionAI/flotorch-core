@@ -52,7 +52,7 @@ class BedrockKnowledgeBaseStorage(VectorStorage):
             content = result.get('content', {})
             metadata=result.get('location',{})
             text = content.get('text', '')
-
+            metadata['score']=result.get('score',0)
             if text:
                 formatted_results.append(VectorStorageSearchItem(text=text,metadata=metadata))
 
