@@ -5,3 +5,6 @@ class MetricKey(str, Enum):
     ASPECT_CRITIC = "aspect_critic"
     FAITHFULNESS = "faithfulness"
     ANSWER_RELEVANCE = "answer_relevance"
+    CONTEXT_RECALL="contextual_recall"
+    CONTEXT_RELAVENCY="contextual_relevancy"
+    HALLUCINATION="hallucination"
