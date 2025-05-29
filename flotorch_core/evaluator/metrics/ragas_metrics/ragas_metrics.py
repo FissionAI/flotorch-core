@@ -8,7 +8,7 @@ from ragas.metrics import (
 )
 
 from flotorch_core.evaluator.metrics.base_metrics import BaseEvaluationMetric
-from flotorch_core.evaluator.metrics.metrics_keys import MetricKey
+from flotorch_core.evaluator.metrics.ragas_metrics_keys import MetricKey
 
 
 class RagasEvaluationMetrics(BaseEvaluationMetric):
