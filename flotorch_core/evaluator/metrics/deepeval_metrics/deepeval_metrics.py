@@ -8,7 +8,7 @@ from deepeval.metrics import (
     HallucinationMetric,
 )
 # from flotorch_core.evaluator.custom_metrics import CustomMetric
-from flotorch_core.evaluator.metrics.deepeval_metrics_keys import MetricKey
+from flotorch_core.evaluator.metrics.metrics_keys import MetricKey
 
 class DeepEvalEvaluationMetrics:
     _registry = {
