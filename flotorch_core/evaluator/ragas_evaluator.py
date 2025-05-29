@@ -5,7 +5,7 @@ from flotorch_core.chunking.chunking import Chunk
 from flotorch_core.embedding.embedding import BaseEmbedding
 from flotorch_core.evaluator.base_evaluator import BaseEvaluator
 from flotorch_core.evaluator.evaluation_item import EvaluationItem
-from flotorch_core.evaluator.metrics.ragas_metrics_keys import MetricKey
+from flotorch_core.evaluator.metrics.metrics_keys import MetricKey
 from flotorch_core.evaluator.metrics.ragas_metrics.ragas_metrics import RagasEvaluationMetrics
 
 from langchain.embeddings.base import Embeddings
