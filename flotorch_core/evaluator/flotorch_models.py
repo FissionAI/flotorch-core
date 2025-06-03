@@ -6,7 +6,6 @@ from typing import Tuple
 class FloTorchLLMWrapper(DeepEvalBaseLLM):
     def __init__(self, inferencer):
         self.inferencer = inferencer
-        self.temperature = 0
 
     def get_model_name(self) -> str:
         return self.inferencer.model_id
@@ -15,8 +14,7 @@ class FloTorchLLMWrapper(DeepEvalBaseLLM):
         client = self.load_model(async_mode=False)
         completion = client.chat.completions.create(
             model=self.inferencer.model_id,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=self.temperature,
+            messages=[{"role": "user", "content": prompt}]
         )
         output = completion.choices[0].message.content
         return output
@@ -25,8 +23,7 @@ class FloTorchLLMWrapper(DeepEvalBaseLLM):
         client = self.load_model(async_mode=True)
         completion = await client.chat.completions.create(
             model=self.model_name,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=self.temperature,
+            messages=[{"role": "user", "content": prompt}]
         )
         output = completion.choices[0].message.content
         return output
