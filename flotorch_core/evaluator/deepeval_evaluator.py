@@ -1,29 +1,33 @@
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional, Union,Tuple
 from deepeval import evaluate
 from deepeval.evaluate import AsyncConfig
 from deepeval.test_case import LLMTestCase
 from flotorch_core.evaluator.base_evaluator import BaseEvaluator
 from flotorch_core.evaluator.evaluation_item import EvaluationItem
-from flotorch_core.evaluator.flotorch_models import FloTorchModel
+from flotorch_core.evaluator.flotorch_models import FloTorchLLMWrapper
 from flotorch_core.evaluator.metrics.deepeval_metrics.deepeval_metrics import DeepEvalEvaluationMetrics
-
 
 class DeepEvalEvaluator(BaseEvaluator):
     def __init__(
         self,
+        inferencer,
         model_name: str,
+
         openai_api_key: Optional[str] = None,
         openai_api_base: Optional[str] = None,
         custom_metrics: Optional[List[Any]] = None,
         async_run: bool = False,
         max_concurrent: int = 1,
         metric_args: Optional[Dict[str, Dict[str, Any]]] = None,  # Accept user args
+
     ):
-        self.llm = FloTorchModel(
-            model=model_name,
+        self.llm = FloTorchLLMWrapper( 
+            model_name=model_name,
             _openai_api_key=openai_api_key,
-            base_url=openai_api_base
+            base_url=openai_api_base,
+            inferencer = inferencer
         )
+        
         self.async_config = AsyncConfig(run_async=async_run, max_concurrent=max_concurrent)
         self.custom_metrics = custom_metrics or []
         self.metric_args = metric_args or {}
@@ -57,3 +61,4 @@ class DeepEvalEvaluator(BaseEvaluator):
             metrics=selected_metrics + self.custom_metrics
         )
         return eval_results.model_dump()
+
