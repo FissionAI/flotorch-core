@@ -1,7 +1,7 @@
 import boto3
 from flotorch_core.storage.db.db_storage import DBStorage
 from flotorch_core.logger.global_logger import get_logger
-from flotorch_core.storage.db.db_utils import _serialize_data
+from flotorch_core.utils.db_utils import DBUtils
 from botocore.exceptions import ClientError
 from typing import List, Dict, Any, Optional
 
@@ -16,7 +16,7 @@ class DynamoDB(DBStorage):
 
     def write(self, item: dict):
         try:
-            serialized_data = self._serialize_data(item)
+            serialized_data = DBUtils.serialize_data(item)
             self.table.put_item(Item=serialized_data)
             return True
         except ClientError as e:

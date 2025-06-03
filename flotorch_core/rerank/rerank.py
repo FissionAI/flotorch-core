@@ -3,10 +3,11 @@ import boto3
 from typing import List, Dict, Optional
 
 from flotorch_core.logger.global_logger import get_logger
+from flotorch_core.rerank.reranker import BaseReranker
 
 logger = get_logger()
 
-class BedrockReranker:
+class BedrockReranker(BaseReranker):
     def __init__(self, region: str, rerank_model_id: str, bedrock_client: Optional[boto3.client] = None):
         """
         Initializes the DocumentReranker with AWS region, model ID, and an optional Bedrock client.
@@ -16,8 +17,7 @@ class BedrockReranker:
             rerank_model_id (str): The model ID for reranking.
             bedrock_client (boto3.client, optional): Pre-initialized Bedrock agent runtime client.
         """
-        self.region = region
-        self.rerank_model_id = rerank_model_id
+        super().__init__(region, rerank_model_id)
         self.bedrock_agent_runtime = bedrock_client or boto3.client('bedrock-agent-runtime', region_name=region)
 
     def rerank_documents(self, input_prompt: str, retrieved_documents: List[Dict[str, str]]) -> List[Dict[str, str]]:
