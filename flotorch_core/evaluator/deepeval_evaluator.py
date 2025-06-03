@@ -11,10 +11,6 @@ class DeepEvalEvaluator(BaseEvaluator):
     def __init__(
         self,
         inferencer,
-        model_name: str,
-
-        openai_api_key: Optional[str] = None,
-        openai_api_base: Optional[str] = None,
         custom_metrics: Optional[List[Any]] = None,
         async_run: bool = False,
         max_concurrent: int = 1,
@@ -22,10 +18,7 @@ class DeepEvalEvaluator(BaseEvaluator):
 
     ):
         self.llm = FloTorchLLMWrapper( 
-            model_name=model_name,
-            _openai_api_key=openai_api_key,
-            base_url=openai_api_base,
-            inferencer = inferencer
+            inferencer = inferencer           
         )
         
         self.async_config = AsyncConfig(run_async=async_run, max_concurrent=max_concurrent)

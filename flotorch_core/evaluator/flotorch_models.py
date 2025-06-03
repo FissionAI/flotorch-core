@@ -4,11 +4,8 @@ from typing import Tuple
 
 
 class FloTorchLLMWrapper(DeepEvalBaseLLM):
-    def __init__(self, inferencer,base_url,_openai_api_key,model_name):
+    def __init__(self, inferencer):
         self.inferencer = inferencer
-        self._openai_api_key = _openai_api_key
-        self.base_url =base_url
-        self.model_name = model_name
         self.temperature = 0
 
     def get_model_name(self) -> str:
@@ -17,7 +14,7 @@ class FloTorchLLMWrapper(DeepEvalBaseLLM):
     def generate(self, prompt: str) -> Tuple[str, float]:
         client = self.load_model(async_mode=False)
         completion = client.chat.completions.create(
-            model=self.model_name,
+            model=self.inferencer.model_id,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
         )
@@ -36,6 +33,6 @@ class FloTorchLLMWrapper(DeepEvalBaseLLM):
 
     def load_model(self, async_mode: bool = False):
         if async_mode:
-            return AsyncOpenAI(base_url=self.base_url, api_key=self._openai_api_key)
+            return AsyncOpenAI(base_url=self.inferencer.base_url, api_key=self.inferencer.api_key)
         else:
-            return OpenAI(base_url=self.base_url, api_key=self._openai_api_key)
+            return OpenAI(base_url=self.inferencer.base_url, api_key=self.inferencer.api_key)
