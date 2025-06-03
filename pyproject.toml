@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "FloTorch-core"
 
-version = "2.9.6"
+version = "2.9.7"
 
 description = "A Python project for FloTorch"
 readme = { file = "README.md", content-type = "text/markdown" }
@@ -22,7 +22,8 @@ dependencies = [
     "sagemaker==2.235.2",
     "openai==1.57.4",
     "ragas==0.2.14",
-    "psycopg2-binary==2.9.9"
+    "psycopg2-binary==2.9.9",
+    "requests==2.31.0"
 ]
 
 [project.optional-dependencies]
