@@ -1,5 +1,4 @@
 import logging
-import traceback
 import requests
 from .storage import StorageProvider
 from typing import Generator, Any, List, Union, Optional, Dict
@@ -55,11 +54,9 @@ class UrlStorageProvider(StorageProvider):
                 response.raise_for_status()
 
         except requests.exceptions.RequestException as e:
-            traceback.print_exc()
             logger.error(f"Error sending data to API URL {path}: {e}")
             raise
         except Exception as e:
-            traceback.print_exc()
             logger.error(f"An unexpected error occurred: {e}")
             raise
 
