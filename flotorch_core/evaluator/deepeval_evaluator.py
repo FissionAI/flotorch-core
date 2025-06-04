@@ -4,23 +4,53 @@ from deepeval.evaluate import AsyncConfig
 from deepeval.test_case import LLMTestCase
 from flotorch_core.evaluator.base_evaluator import BaseEvaluator
 from flotorch_core.evaluator.evaluation_item import EvaluationItem
-from flotorch_core.evaluator.flotorch_models import FloTorchLLMWrapper
 from flotorch_core.evaluator.metrics.deepeval_metrics.deepeval_metrics import DeepEvalEvaluationMetrics
+from deepeval.models.base_model import DeepEvalBaseLLM
+from flotorch_core.inferencer.inferencer import BaseInferencer
+from pydantic import BaseModel
+from deepeval.models.llms.utils import trim_and_load_json
+
 
 class DeepEvalEvaluator(BaseEvaluator):
     def __init__(
         self,
-        inferencer,
+        inferencer: BaseInferencer,
         custom_metrics: Optional[List[Any]] = None,
         async_run: bool = False,
         max_concurrent: int = 1,
         metric_args: Optional[Dict[str, Dict[str, Any]]] = None,  # Accept user args
 
     ):
-        self.llm = FloTorchLLMWrapper( 
-            inferencer = inferencer           
-        )
-        
+        class FloTorchLLMWrapper(DeepEvalBaseLLM):
+            def __init__(self, inferencer: BaseInferencer, *args, **kwargs):
+                self.inferencer = inferencer
+                super().__init__(*args, **kwargs)
+
+            def get_model_name(self) -> str:
+                return self.inferencer.model_id
+
+            def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> Tuple[str, float]:
+                client = self.load_model(async_mode=False)
+                _, completion = client.generate_text(prompt, None)
+                if schema:
+                    json_output = trim_and_load_json(completion)
+                    return schema.model_validate(json_output)
+                else:
+                    return completion
+
+            async def a_generate(self, prompt: str, schema: Optional[BaseModel] = None) -> Tuple[str, float]:
+                client = self.load_model(async_mode=True)
+                _, completion = await client.generate_text(prompt, None)
+                if schema:
+                    json_output = trim_and_load_json(completion)
+                    return schema.model_validate(json_output)
+                else:
+                    return completion
+
+            def load_model(self, async_mode: bool = False):
+                return self.inferencer
+
+        self.llm = FloTorchLLMWrapper(inferencer)
         self.async_config = AsyncConfig(run_async=async_run, max_concurrent=max_concurrent)
         self.custom_metrics = custom_metrics or []
         self.metric_args = metric_args or {}
