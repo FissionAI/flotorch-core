@@ -14,7 +14,7 @@ from deepeval.models.llms.utils import trim_and_load_json
 class DeepEvalEvaluator(BaseEvaluator):
     def __init__(
         self,
-        inferencer: BaseInferencer,
+        evaluator_llm: BaseInferencer,
         custom_metrics: Optional[List[Any]] = None,
         async_run: bool = False,
         max_concurrent: int = 1,
@@ -22,12 +22,12 @@ class DeepEvalEvaluator(BaseEvaluator):
 
     ):
         class FloTorchLLMWrapper(DeepEvalBaseLLM):
-            def __init__(self, inferencer: BaseInferencer, *args, **kwargs):
-                self.inferencer = inferencer
+            def __init__(self, inference_llm: BaseInferencer, *args, **kwargs):
+                self.inference_llm = inference_llm
                 super().__init__(*args, **kwargs)
 
             def get_model_name(self) -> str:
-                return self.inferencer.model_id
+                return self.inference_llm.model_id
 
             def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> Tuple[str, float]:
                 client = self.load_model(async_mode=False)
@@ -48,9 +48,9 @@ class DeepEvalEvaluator(BaseEvaluator):
                     return completion
 
             def load_model(self, async_mode: bool = False):
-                return self.inferencer
+                return self.inference_llm
 
-        self.llm = FloTorchLLMWrapper(inferencer)
+        self.llm = FloTorchLLMWrapper(evaluator_llm)
         self.async_config = AsyncConfig(run_async=async_run, max_concurrent=max_concurrent)
         self.custom_metrics = custom_metrics or []
         self.metric_args = metric_args or {}
