@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional, Union,Tuple
+from typing import List, Dict, Any, Optional
 from deepeval import evaluate
 from deepeval.evaluate import AsyncConfig
 from deepeval.test_case import LLMTestCase
