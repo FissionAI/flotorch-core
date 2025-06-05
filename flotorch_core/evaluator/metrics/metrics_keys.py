@@ -6,5 +6,5 @@ class MetricKey(str, Enum):
     FAITHFULNESS = "faithfulness"
     ANSWER_RELEVANCE = "answer_relevance"
     CONTEXT_RECALL="contextual_recall"
-    CONTEXT_RELAVENCY="contextual_relevancy"
+    CONTEXT_RELEVANCY="contextual_relevancy"
     HALLUCINATION="hallucination"

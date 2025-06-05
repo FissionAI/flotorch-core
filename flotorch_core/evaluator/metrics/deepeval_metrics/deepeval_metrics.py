@@ -16,7 +16,7 @@ class DeepEvalEvaluationMetrics:
             "class": FaithfulnessMetric,
             "default_args": {"threshold": 0.7, "truths_extraction_limit": 50}
         },
-        MetricKey.CONTEXT_RELAVENCY: {
+        MetricKey.CONTEXT_RELEVANCY: {
             "class": ContextualRelevancyMetric,
             "default_args": {"threshold": 0.7}
         },
