@@ -45,7 +45,7 @@ class DeepEvalEvaluator(BaseEvaluator):
             def load_model(self):
                 return self.inference_llm
             
-            def schema_validation(self, completion: Tuple[str], schema: Optional[BaseModel] = None):
+            def schema_validation(self, completion: str, schema: Optional[BaseModel] = None):
                 try:
                     if schema:
                         json_output = trim_and_load_json(completion)
