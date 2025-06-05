@@ -16,4 +16,4 @@ class EnvConfigProvider(ConfigProvider):
         Returns:
             Any: The value of the environment variable or the default.
         """
-        return os.getenv(key, default)
+        return os.environ.get(key, default)
