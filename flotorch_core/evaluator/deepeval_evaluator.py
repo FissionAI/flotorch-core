@@ -9,6 +9,9 @@ from deepeval.models.base_model import DeepEvalBaseLLM
 from flotorch_core.inferencer.inferencer import BaseInferencer
 from pydantic import BaseModel
 from deepeval.models.llms.utils import trim_and_load_json
+from flotorch_core.logger.global_logger import get_logger
+
+logger = get_logger()
 
 
 class DeepEvalEvaluator(BaseEvaluator):
@@ -29,26 +32,29 @@ class DeepEvalEvaluator(BaseEvaluator):
             def get_model_name(self) -> str:
                 return self.inference_llm.model_id
 
-            def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> Tuple[str, float]:
-                client = self.load_model(async_mode=False)
+            def generate(self, prompt: str, schema: Optional[BaseModel] = None):
+                client = self.load_model()
                 _, completion = client.generate_text(prompt, None)
-                if schema:
-                    json_output = trim_and_load_json(completion)
-                    return schema.model_validate(json_output)
-                else:
-                    return completion
+                return self.schema_validation(completion, schema)
 
-            async def a_generate(self, prompt: str, schema: Optional[BaseModel] = None) -> Tuple[str, float]:
-                client = self.load_model(async_mode=True)
+            async def a_generate(self, prompt: str, schema: Optional[BaseModel] = None):
+                client = self.load_model()
                 _, completion = await client.generate_text(prompt, None)
-                if schema:
-                    json_output = trim_and_load_json(completion)
-                    return schema.model_validate(json_output)
-                else:
-                    return completion
+                return self.schema_validation(completion, schema)
 
-            def load_model(self, async_mode: bool = False):
+            def load_model(self):
                 return self.inference_llm
+            
+            def schema_validation(self, completion: Tuple[str], schema: Optional[BaseModel] = None):
+                try:
+                    if schema:
+                        json_output = trim_and_load_json(completion)
+                        return schema.model_validate(json_output)
+                    else:
+                        return completion
+                except Exception as e:
+                    logger.error(f"Schema validation error due to {e}.")
+                    return completion
 
         self.llm = FloTorchLLMWrapper(evaluator_llm)
         self.async_config = AsyncConfig(run_async=async_run, max_concurrent=max_concurrent)
@@ -57,6 +63,9 @@ class DeepEvalEvaluator(BaseEvaluator):
 
         # Initialize DeepEval metrics from the registry
         DeepEvalEvaluationMetrics.initialize_metrics(llm=self.llm, metric_args=self.metric_args)
+
+
+    
 
     def _build_test_cases(self, data: List[EvaluationItem]) -> List[LLMTestCase]:
         return [
