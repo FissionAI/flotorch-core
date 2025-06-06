@@ -8,8 +8,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 class LlamaInferencer(SageMakerInferencer):
-    def __init__(self, model_id: str, region: str, role_arn: str, n_shot_prompts: int = 0, temperature: float = 0.7, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None):
-        super().__init__(model_id, region, role_arn, n_shot_prompts, temperature, n_shot_prompt_guide_obj)
+    def __init__(self, model_id: str, region: str, role_arn: str, n_shot_prompts: int = 0, temperature: float = 0.7, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None, max_tokens: int = 512, topP: int = 0.9):
+        super().__init__(model_id, region, role_arn, n_shot_prompts, temperature, n_shot_prompt_guide_obj, max_tokens, topP)
         
     def _prepare_conversation(self, message: str, role: str):
         # Format message and role into a conversation
