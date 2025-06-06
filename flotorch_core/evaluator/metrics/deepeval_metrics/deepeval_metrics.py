@@ -7,10 +7,11 @@ from deepeval.metrics import (
     AnswerRelevancyMetric,
     HallucinationMetric,
 )
+from flotorch_core.evaluator.metrics.base_metrics import BaseEvaluationMetric
 # from flotorch_core.evaluator.custom_metrics import CustomMetric
 from flotorch_core.evaluator.metrics.metrics_keys import MetricKey
 
-class DeepEvalEvaluationMetrics:
+class DeepEvalEvaluationMetrics(BaseEvaluationMetric):
     _registry = {
         MetricKey.FAITHFULNESS: {
             "class": FaithfulnessMetric,
@@ -65,6 +66,6 @@ class DeepEvalEvaluationMetrics:
         return cls._initialized_metrics[name]
 
     @classmethod
-    def get_all_metrics(cls, selected: Optional[list[str]] = None):
+    def available_metrics(cls, selected: Optional[list[str]] = None):
         selected = selected or list(cls._initialized_metrics.keys())
         return [cls.get_metric(name) for name in selected]

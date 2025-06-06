@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional,Type
 from deepeval import evaluate
 from deepeval.evaluate import AsyncConfig
 from deepeval.test_case import LLMTestCase
@@ -32,12 +32,12 @@ class DeepEvalEvaluator(BaseEvaluator):
             def get_model_name(self) -> str:
                 return self.inference_llm.model_id
 
-            def generate(self, prompt: str, schema: Optional[BaseModel] = None):
+            def generate(self, prompt: str, schema:Optional[Type[BaseModel]] = None):
                 client = self.load_model()
                 _, completion = client.generate_text(prompt, None)
                 return self.schema_validation(completion, schema)
 
-            async def a_generate(self, prompt: str, schema: Optional[BaseModel] = None):
+            async def a_generate(self, prompt: str, schema: Optional[Type[BaseModel]] = None):
                 client = self.load_model()
                 _, completion = await client.generate_text(prompt, None)
                 return self.schema_validation(completion, schema)
@@ -45,7 +45,7 @@ class DeepEvalEvaluator(BaseEvaluator):
             def load_model(self):
                 return self.inference_llm
             
-            def schema_validation(self, completion: str, schema: Optional[BaseModel] = None):
+            def schema_validation(self, completion: str,schema: Optional[Type[BaseModel]] = None):
                 try:
                     if schema:
                         json_output = trim_and_load_json(completion)
@@ -63,9 +63,6 @@ class DeepEvalEvaluator(BaseEvaluator):
 
         # Initialize DeepEval metrics from the registry
         DeepEvalEvaluationMetrics.initialize_metrics(llm=self.llm, metric_args=self.metric_args)
-
-
-    
 
     def _build_test_cases(self, data: List[EvaluationItem]) -> List[LLMTestCase]:
         return [
@@ -85,7 +82,7 @@ class DeepEvalEvaluator(BaseEvaluator):
         metrics: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         test_cases = self._build_test_cases(data)
-        selected_metrics = DeepEvalEvaluationMetrics.get_all_metrics(metrics)
+        selected_metrics = DeepEvalEvaluationMetrics.available_metrics(metrics)
 
         eval_results = evaluate(
             test_cases=test_cases,
