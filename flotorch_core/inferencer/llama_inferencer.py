@@ -8,8 +8,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 class LlamaInferencer(SageMakerInferencer):
-    def __init__(self, model_id: str, region: str, role_arn: str, n_shot_prompts: int = 0, temperature: float = 0.7, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None):
-        super().__init__(model_id, region, role_arn, n_shot_prompts, temperature, n_shot_prompt_guide_obj)
+    def __init__(self, model_id: str, region: str, role_arn: str, n_shot_prompts: int = 0, temperature: float = 0.7, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None, max_tokens: int = 512, topP: int = 0.9):
+        super().__init__(model_id, region, role_arn, n_shot_prompts, temperature, n_shot_prompt_guide_obj, max_tokens, topP)
         
     def _prepare_conversation(self, message: str, role: str):
         # Format message and role into a conversation
@@ -21,15 +21,18 @@ class LlamaInferencer(SageMakerInferencer):
             }
         return conversation
     
-    def generate_prompt(self, user_query: str, context: List[Dict]) -> Tuple[str, List[Dict[str, Any]]]:
+    def generate_prompt(self, user_query: str, context: List[Dict], use_system: bool) -> Tuple[str, List[Dict[str, Any]]]:
         # Input validation
         if self.n_shot_prompts < 0:
             raise ValueError("n_shot_prompt must be non-negative")
         
-        default_prompt = "You are a helpful assistant. Use the provided context to answer questions accurately. If you cannot find the answer in the context, say so"
         # Get system prompt
-        system_prompt = default_prompt if not self.n_shot_prompt_guide_obj or not self.n_shot_prompt_guide_obj.get("system_prompt") else self.n_shot_prompt_guide_obj.get("system_prompt")
-        
+        system_prompt = None
+        if use_system:
+            system_prompt = self.n_shot_prompt_guide_obj.get("system_prompt", "") if self.n_shot_prompt_guide_obj and self.n_shot_prompt_guide_obj.get("system_prompt") else DEFAULT_SYSTEM_PROMPT
+        else:
+            logger.info("No system prompt set as guide has no prompt and use_default is false")
+            
         context_text = ""
         if context:
             context_text = self.format_context(user_query, context)
