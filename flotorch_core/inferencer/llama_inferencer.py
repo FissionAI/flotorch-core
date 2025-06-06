@@ -21,15 +21,18 @@ class LlamaInferencer(SageMakerInferencer):
             }
         return conversation
     
-    def generate_prompt(self, user_query: str, context: List[Dict]) -> Tuple[str, List[Dict[str, Any]]]:
+    def generate_prompt(self, user_query: str, context: List[Dict], use_system: bool) -> Tuple[str, List[Dict[str, Any]]]:
         # Input validation
         if self.n_shot_prompts < 0:
             raise ValueError("n_shot_prompt must be non-negative")
         
-        default_prompt = "You are a helpful assistant. Use the provided context to answer questions accurately. If you cannot find the answer in the context, say so"
         # Get system prompt
-        system_prompt = default_prompt if not self.n_shot_prompt_guide_obj or not self.n_shot_prompt_guide_obj.get("system_prompt") else self.n_shot_prompt_guide_obj.get("system_prompt")
-        
+        system_prompt = None
+        if use_system:
+            system_prompt = self.n_shot_prompt_guide_obj.get("system_prompt", "") if self.n_shot_prompt_guide_obj and self.n_shot_prompt_guide_obj.get("system_prompt") else DEFAULT_SYSTEM_PROMPT
+        else:
+            logger.info("No system prompt set as guide has no prompt and use_default is false")
+            
         context_text = ""
         if context:
             context_text = self.format_context(user_query, context)

@@ -1,4 +1,4 @@
-from flotorch_core.inferencer.inferencer import BaseInferencer
+from flotorch_core.inferencer.inferencer import BaseInferencer, DEFAULT_SYSTEM_PROMPT
 from typing import List, Dict, Any, Tuple
 from flotorch_core.logger.global_logger import get_logger
 import boto3
@@ -14,7 +14,7 @@ class BedrockInferencer(BaseInferencer):
     Bedrock-specific implementation of the BaseInferencer.
     """
 
-    def __init__(self, model_id: str, region: str = "us-east-1", n_shot_prompts: int = 0, temperature: float = 0.7, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None):
+    def __init__(self, model_id: str, region: str = "us-east-1", n_shot_prompts: int = 0, temperature: float = 0.7, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None, max_tokens: int = 512, topP: int = 0.9):
         """
         Initialize the BedrockInferencer with Bedrock-specific parameters.
 
@@ -30,30 +30,34 @@ class BedrockInferencer(BaseInferencer):
             service_name='bedrock-runtime',
             region_name=region
         )
+        self.max_tokens = max_tokens
+        self.topP = topP
 
     @BedRockRetryHander()
-    def generate_text(self, user_query: str, context: List[Dict] = None) -> Tuple[Dict[Any, Any], str]:
+    def generate_text(self, user_query: str, context: List[Dict] = None, use_system: bool = True) -> Tuple[Dict[Any, Any], str]:
         """
         Generate a response based on the user query and context using Bedrock.
         """
         try:
-            system_prompt, messages = self.generate_prompt(user_query, context)
+            system_prompt, messages = self.generate_prompt(user_query, use_system, context)
             
             inference_config = {
-                "maxTokens": 512, 
+                "maxTokens": self.max_tokens, 
                 "temperature": self.temperature, 
-                "topP": 0.9
+                "topP": self.topP
             }
             
             skip_system_param = self.model_id in ("amazon.titan-text-express-v1", "amazon.titan-text-lite-v1", "mistral.mistral-7b-instruct-v0:2")
             request_params = {
                 "modelId": self.model_id,
-                "messages": ([self._prepare_conversation(role="user", message=system_prompt)] if skip_system_param else []) + messages,
-                "inferenceConfig": inference_config
+                "inferenceConfig": inference_config,
+                "messages": messages
             }
-            
-            if not skip_system_param:
-                request_params["system"] = [{"text": system_prompt}]
+            if system_prompt:
+                if skip_system_param:
+                    request_params["messages"] = [self._prepare_conversation(role="user", message=system_prompt)] + messages
+                else:
+                    request_params["system"] = [{"text": system_prompt}]            
             
             response = self.client.converse(**request_params)
             
@@ -70,20 +74,22 @@ class BedrockInferencer(BaseInferencer):
             logger.error(f"Error generating text with Bedrock: {str(e)}")
             raise
 
-    def generate_prompt(self, user_query: str, context: List[Dict] = None) -> Tuple[str, List[Dict[str, Any]]]:
+    def generate_prompt(self, user_query: str, use_system: bool, context: List[Dict] = None) -> Tuple[str, List[Dict[str, Any]]]:
         """
         Construct a prompt for the Bedrock inferencer based on the user query and context.
         """
         messages = []
         context_text = ""
-        
+        system_prompt = None
         # Validate n_shot_prompt
         if self.n_shot_prompts < 0:
             raise ValueError("n_shot_prompts must be non-negative")
         
-        default_prompt = "You are a helpful assistant. Use the provided context to answer questions accurately. If you cannot find the answer in the context, say so"
         # Get system prompt
-        system_prompt = default_prompt if not self.n_shot_prompt_guide_obj or not self.n_shot_prompt_guide_obj.get("system_prompt") else self.n_shot_prompt_guide_obj.get("system_prompt")
+        if use_system:
+            system_prompt = self.n_shot_prompt_guide_obj.get("system_prompt", "") if self.n_shot_prompt_guide_obj and self.n_shot_prompt_guide_obj.get("system_prompt") else DEFAULT_SYSTEM_PROMPT
+        else:
+            logger.info("No system prompt set as guide has no prompt and use_default is false")
         
         # Process context
         if context:

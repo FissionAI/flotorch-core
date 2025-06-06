@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Tuple
 
+DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant. Use the provided context to answer questions accurately. If you cannot find the answer in the context, say so"
 class BaseInferencer(ABC):
     """
     Abstract base class for all inferencers.
