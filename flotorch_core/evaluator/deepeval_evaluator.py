@@ -25,16 +25,19 @@ class DeepEvalEvaluator(BaseEvaluator):
     concurrency limits, and optional metric-specific arguments.
     Args:
         evaluator_llm : The LLM inferencer used for evaluation.
+        custom_metrics :A list of additional metric instances to include in evaluation beyond the default DeepEval metrics registry.
+        async_run :Whether to run evaluation asynchronously.If True, evaluation can run concurrently up to `max_concurrent` tasks.
+        max_concurrent : Maximum number of concurrent asynchronous evaluation tasks to run.    
         metric_args :Optional dictionary specifying per-metric configuration arguments.
-        Example:
-            metric_args = {
-                "contextual_recall": {
-                    "threshold": 0.6
-                },
-                "hallucination": {
-                    "threshold": 0.4
-                }
+    Example:
+        metric_args = {
+            "contextual_recall": {
+                "threshold": 0.6
+            },
+            "hallucination": {
+                "threshold": 0.4
             }
+        }
     """
 
     def __init__(
@@ -132,7 +135,6 @@ class DeepEvalEvaluator(BaseEvaluator):
             DeepEvalEvaluationMetrics.get_metric(m)
             for m in metrics
         ]
-        
         eval_results = evaluate(
             test_cases=test_cases,
             async_config=self.async_config,
