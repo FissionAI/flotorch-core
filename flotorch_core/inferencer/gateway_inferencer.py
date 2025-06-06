@@ -7,11 +7,12 @@ import time
 
 
 class GatewayInferencer(BaseInferencer):
-    def __init__(self, model_id: str, api_key: str, base_url: str = None, n_shot_prompts: int = 0, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None):
+    def __init__(self, model_id: str, api_key: str, base_url: str = None, headers: Dict[str, str] = None, n_shot_prompts: int = 0, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None):
         super().__init__(model_id, None, n_shot_prompts, None, n_shot_prompt_guide_obj)
         self.api_key = api_key
         self.base_url = base_url
-        self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+        self.headers = headers or {}
+        self.client = OpenAI(api_key=self.api_key, base_url=self.base_url, default_headers=self.headers)
 
     def generate_prompt(self, user_query: str, context: List[Dict]) -> List[Dict[str, str]]:
         messages = []
