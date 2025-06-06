@@ -128,12 +128,11 @@ class DeepEvalEvaluator(BaseEvaluator):
         if metrics is None:
             metrics = DeepEvalEvaluationMetrics.available_metrics()
 
-        selected_metrics = list(chain.from_iterable(
-            DeepEvalEvaluationMetrics.get_metric(m).values() if isinstance(DeepEvalEvaluationMetrics.get_metric(m), dict)
-            else [DeepEvalEvaluationMetrics.get_metric(m)]
+        selected_metrics = [
+            DeepEvalEvaluationMetrics.get_metric(m)
             for m in metrics
-        ))
-
+        ]
+        
         eval_results = evaluate(
             test_cases=test_cases,
             async_config=self.async_config,
