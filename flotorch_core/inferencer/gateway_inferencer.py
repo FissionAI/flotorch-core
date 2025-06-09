@@ -21,8 +21,6 @@ class GatewayInferencer(BaseInferencer):
         if use_system:
             system_prompt = self.n_shot_prompt_guide_obj.get("system_prompt", "") if self.n_shot_prompt_guide_obj and self.n_shot_prompt_guide_obj.get("system_prompt") else DEFAULT_SYSTEM_PROMPT
             messages.append({"role": "system", "content": system_prompt})
-        else:
-            logger.info("No system prompt set as guide has no prompt and use_default is false")
             
         # Nshot examples
         if self.n_shot_prompt_guide_obj:

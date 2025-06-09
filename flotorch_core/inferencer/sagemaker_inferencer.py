@@ -148,8 +148,6 @@ class SageMakerInferencer(BaseInferencer):
         system_prompt = None
         if use_system:
             system_prompt = self.n_shot_prompt_guide_obj.get("system_prompt", "") if self.n_shot_prompt_guide_obj and self.n_shot_prompt_guide_obj.get("system_prompt") else DEFAULT_SYSTEM_PROMPT
-        else:
-            logger.info("No system prompt set as guide has no prompt and use_default is false")
         
         context_text = self.format_context(user_query, context)
 
