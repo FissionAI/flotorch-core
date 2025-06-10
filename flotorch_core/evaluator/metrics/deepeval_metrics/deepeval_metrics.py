@@ -15,7 +15,7 @@ class DeepEvalEvaluationMetrics(BaseEvaluationMetric):
     _registry = {
         MetricKey.FAITHFULNESS: {
             "class": FaithfulnessMetric,
-            "default_args": {"threshold": 0.7, "truths_extraction_limit": 50}
+            "default_args": {"threshold": 0.7, "truths_extraction_limit": 30}
         },
         MetricKey.CONTEXT_RELEVANCY: {
             "class": ContextualRelevancyMetric,
