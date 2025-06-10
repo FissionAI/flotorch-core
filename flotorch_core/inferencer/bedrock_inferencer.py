@@ -14,7 +14,7 @@ class BedrockInferencer(BaseInferencer):
     Bedrock-specific implementation of the BaseInferencer.
     """
 
-    def __init__(self, model_id: str, region: str = "us-east-1", n_shot_prompts: int = 0, temperature: float = 0.7, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None, max_tokens: int = 512, topP: int = 0.9):
+    def __init__(self, model_id: str, region: str = "us-east-1", n_shot_prompts: int = 0, temperature: float = 0.7, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None, max_tokens: int = None, topP: int = None):
         """
         Initialize the BedrockInferencer with Bedrock-specific parameters.
 
@@ -42,10 +42,14 @@ class BedrockInferencer(BaseInferencer):
             system_prompt, messages = self.generate_prompt(user_query, use_system, context)
             
             inference_config = {
-                "maxTokens": self.max_tokens, 
-                "temperature": self.temperature, 
-                "topP": self.topP
+                "temperature": self.temperature
             }
+            for param, value in [
+                ("maxTokens", self.max_tokens),
+                ("topP", self.topP)
+            ]:
+                if value is not None:
+                    inference_config[param] = value   
             
             skip_system_param = self.model_id in ("amazon.titan-text-express-v1", "amazon.titan-text-lite-v1", "mistral.mistral-7b-instruct-v0:2")
             request_params = {

@@ -37,7 +37,7 @@ class UrlStorageProvider(StorageProvider):
                                                  will be added if not already present.
         """
         try:
-            logger.info(f"Sending data to API URL: {path} with payload: {data}")
+            logger.info(f"Sending data to API URL: {path}")
             response = requests.post(path, json=data, headers=headers)
 
             if response.status_code == 200:
@@ -54,10 +54,10 @@ class UrlStorageProvider(StorageProvider):
                 response.raise_for_status()
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"Error sending data to API URL {path}: {e}")
+            logger.error(f"Error sending data to API URL {path}, data: {data}: {e}")
             raise
         except Exception as e:
-            logger.error(f"An unexpected error occurred: {e}")
+            logger.error(f"Error sending data to API URL {path}, data: {data}: {e}")
             raise
 
     def read(self, path: str, headers: Optional[Dict[str, str]] = None) -> Generator[bytes, None, None]:

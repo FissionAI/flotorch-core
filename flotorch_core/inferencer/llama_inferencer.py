@@ -85,11 +85,15 @@ class LlamaInferencer(SageMakerInferencer):
         """
         # Define default parameters for the model's generation
         default_params = {
-            "max_new_tokens": 256,
             "temperature": self.temperature,
-            "top_p": 0.9,
             "do_sample": True
-        }
+            }
+        for param, value in [
+            ("max_new_tokens", self.max_tokens),
+            ("top_p", self.topP)
+        ]:
+            if value is not None:
+                default_params[param] = value    
         
         # Prepare payload for model inference
         payload = {

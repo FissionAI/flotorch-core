@@ -13,7 +13,7 @@ from sagemaker.predictor import Predictor
 logger = get_logger()
 
 class SageMakerInferencer(BaseInferencer):
-    def __init__(self, model_id: str, region: str, role_arn: str, n_shot_prompts: int = 0, temperature: float = 0.7, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None, max_tokens: int = 512, topP: int = 0.9):
+    def __init__(self, model_id: str, region: str, role_arn: str, n_shot_prompts: int = 0, temperature: float = 0.7, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None, max_tokens: int = None, topP: int = None):
         """
         Initialize the BedrockInferencer with Bedrock-specific parameters.
 
@@ -226,11 +226,15 @@ class SageMakerInferencer(BaseInferencer):
         """
         # Define default parameters for controlling the model's text generation
         default_params = {
-            "max_new_tokens": self.max_tokens,
             "temperature": self.temperature,
-            "top_p": self.topP,
             "do_sample": True
             }
+        for param, value in [
+            ("max_new_tokens", self.max_tokens),
+            ("top_p", self.topP)
+        ]:
+            if value is not None:
+                default_params[param] = value    
         # Construct the complete payload with prompt and generation parameters
         payload = {
             "inputs": prompt,
