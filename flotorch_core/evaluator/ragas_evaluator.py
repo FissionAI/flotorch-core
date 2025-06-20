@@ -69,7 +69,7 @@ class RagasEvaluator(BaseEvaluator):
             def _embed_text(self, text: str) -> list[float]:
                 chunk = Chunk(data=text)
                 embedding = self.internal_embedding.embed(chunk)
-                return embedding.embeddings[0]
+                return embedding.embeddings
             
         class _LLMWrapper(LanguageModelLike):
             def __init__(self, internal_llm: BaseInferencer):
