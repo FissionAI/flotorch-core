@@ -11,8 +11,7 @@ from pydantic import BaseModel
 from flotorch_core.evaluator.metrics.metrics_keys import MetricKey
 from deepeval.models.llms.utils import trim_and_load_json
 from flotorch_core.logger.global_logger import get_logger
-from itertools import chain
-
+from deepeval.evaluate import ErrorConfig
 logger = get_logger()
 
 
@@ -138,7 +137,8 @@ class DeepEvalEvaluator(BaseEvaluator):
         eval_results = evaluate(
             test_cases=test_cases,
             async_config=self.async_config,
-            metrics=selected_metrics + self.custom_metrics
+            metrics=selected_metrics + self.custom_metrics,
+            error_config=ErrorConfig(ignore_errors=True)
         )
         return eval_results.model_dump()
 
