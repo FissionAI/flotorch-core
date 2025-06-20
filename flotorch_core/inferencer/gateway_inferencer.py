@@ -1,10 +1,11 @@
 import random
 from openai import OpenAI
 from typing import List, Dict, Tuple
-
-from flotorch_core.inferencer.inferencer import BaseInferencer
+from flotorch_core.logger.global_logger import get_logger
+from flotorch_core.inferencer.inferencer import BaseInferencer, DEFAULT_SYSTEM_PROMPT
 import time
 
+logger = get_logger()
 
 class GatewayInferencer(BaseInferencer):
     def __init__(self, model_id: str, api_key: str, base_url: str = None, headers: Dict[str, str] = None, n_shot_prompts: int = 0, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None):
@@ -14,18 +15,14 @@ class GatewayInferencer(BaseInferencer):
         self.headers = headers or {}
         self.client = OpenAI(api_key=self.api_key, base_url=self.base_url, default_headers=self.headers)
 
-    def generate_prompt(self, user_query: str, context: List[Dict]) -> List[Dict[str, str]]:
+    def generate_prompt(self, user_query: str, use_system: bool, context: List[Dict]) -> List[Dict[str, str]]:
         messages = []
-        
+        system_prompt = None
         # System prompt
-        default_prompt = "You are a helpful assistant. Use the provided context to answer questions accurately. If you cannot find the answer in the context, say so"
-        system_prompt = (
-            self.n_shot_prompt_guide_obj.get("system_prompt", default_prompt)
-            if self.n_shot_prompt_guide_obj
-            else default_prompt
-        )
-        messages.append({"role": "system", "content": system_prompt})
-
+        if use_system:
+            system_prompt = self.n_shot_prompt_guide_obj.get("system_prompt", "") if self.n_shot_prompt_guide_obj and self.n_shot_prompt_guide_obj.get("system_prompt") else DEFAULT_SYSTEM_PROMPT
+            messages.append({"role": "system", "content": system_prompt})
+            
         # Nshot examples
         if self.n_shot_prompt_guide_obj:
             examples = self.n_shot_prompt_guide_obj.get("examples", [])
@@ -55,8 +52,8 @@ class GatewayInferencer(BaseInferencer):
         
         return messages
 
-    def generate_text(self, user_query: str, context: List[Dict]) -> Tuple[Dict, str]:
-        messages  = self.generate_prompt(user_query, context)
+    def generate_text(self, user_query: str, context: List[Dict], use_system: bool = True) -> Tuple[Dict, str]:
+        messages  = self.generate_prompt(user_query, use_system, context)
         
         start_time = time.time()
         response = self.client.chat.completions.create(

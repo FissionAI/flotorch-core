@@ -2,7 +2,7 @@ import random
 import time
 from typing import Any, Dict, List, Tuple
 import boto3
-from flotorch_core.inferencer.inferencer import BaseInferencer
+from flotorch_core.inferencer.inferencer import BaseInferencer, DEFAULT_SYSTEM_PROMPT
 from flotorch_core.logger.global_logger import get_logger
 from flotorch_core.utils.sagemaker_utils import SageMakerUtils, INFERENCER_MODELS
 from sagemaker.session import Session
@@ -13,7 +13,7 @@ from sagemaker.predictor import Predictor
 logger = get_logger()
 
 class SageMakerInferencer(BaseInferencer):
-    def __init__(self, model_id: str, region: str, role_arn: str, n_shot_prompts: int = 0, temperature: float = 0.7, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None):
+    def __init__(self, model_id: str, region: str, role_arn: str, n_shot_prompts: int = 0, temperature: float = 0.7, n_shot_prompt_guide_obj: Dict[str, List[Dict[str, str]]] = None, max_tokens: int = None, topP: int = None):
         """
         Initialize the BedrockInferencer with Bedrock-specific parameters.
 
@@ -28,6 +28,8 @@ class SageMakerInferencer(BaseInferencer):
         self.role = role_arn
         self.client = boto3.client("sagemaker-runtime", region_name=region)
         self.sagemaker_client = boto3.client('sagemaker', region_name=region)
+        self.max_tokens = max_tokens
+        self.topP = topP
 
         logger.info(f"Initializing SageMaker Generator for model: {model_id}")
 
@@ -56,11 +58,11 @@ class SageMakerInferencer(BaseInferencer):
 
         self.inferencing_predictor = self.predictor
 
-    def generate_text(self, user_query: str, context: List[Dict]) -> Tuple[Dict[Any, Any], str]:
+    def generate_text(self, user_query: str, context: List[Dict], use_system: bool = True) -> Tuple[Dict[Any, Any], str]:
         if not self.inferencing_predictor:
             raise ValueError("Generation predictor not initialized")
         
-        system_prompt, prompt = self.generate_prompt(user_query, context)
+        system_prompt, prompt = self.generate_prompt(user_query, use_system, context)
 
         payload = self.construct_payload(system_prompt, prompt)
 
@@ -138,13 +140,14 @@ class SageMakerInferencer(BaseInferencer):
 
         return cleaned_text.strip()            
 
-    def generate_prompt(self, user_query: str, context: List[Dict]) -> Tuple[str, List[Dict[str, Any]]]:
+    def generate_prompt(self, user_query: str, use_system: bool, context: List[Dict]) -> Tuple[str, List[Dict[str, Any]]]:
         if self.n_shot_prompts < 0:
             raise ValueError("n_shot_prompt must be non-negative")
         
-        default_prompt = "You are a helpful assistant. Use the provided context to answer questions accurately. If you cannot find the answer in the context, say so"
         # Get system prompt
-        system_prompt = default_prompt if not self.n_shot_prompt_guide_obj or not self.n_shot_prompt_guide_obj.get("system_prompt") else self.n_shot_prompt_guide_obj.get("system_prompt")
+        system_prompt = None
+        if use_system:
+            system_prompt = self.n_shot_prompt_guide_obj.get("system_prompt", "") if self.n_shot_prompt_guide_obj and self.n_shot_prompt_guide_obj.get("system_prompt") else DEFAULT_SYSTEM_PROMPT
         
         context_text = self.format_context(user_query, context)
 
@@ -160,7 +163,7 @@ class SageMakerInferencer(BaseInferencer):
                     Summary:"""
                 return None, prompt
             
-            prompt = f"Human: {system_prompt}\n\n{context_text}\n\n{base_prompt}\n\nAssistant: The final answer is:"
+            prompt = f"Human: {system_prompt + chr(10) if system_prompt else ''}\n\n{context_text}\n\n{base_prompt}\n\nAssistant: The final answer is:"
             return None, prompt.strip()
         
         examples = self.n_shot_prompt_guide_obj['examples']
@@ -184,8 +187,8 @@ class SageMakerInferencer(BaseInferencer):
                 
             return None, prompt
         
-        prompt = f"Human: {system_prompt}\n\nFew examples:\n{example_text}\n{context_text}\n\n{base_prompt}\n\nAssistant: The final answer is:"
-        return prompt.strip()
+        prompt = f"Human: {system_prompt + chr(10) if system_prompt else ''}Few examples:\n{example_text}\n{context_text}\n\n{base_prompt}\n\nAssistant: The final answer is:"
+        return None, prompt.strip()
     
     def format_context(self, user_query: str, context: List[Dict[str, str]]) -> str:
         """Format context documents into a single string."""
@@ -223,11 +226,15 @@ class SageMakerInferencer(BaseInferencer):
         """
         # Define default parameters for controlling the model's text generation
         default_params = {
-            "max_new_tokens": 256,
             "temperature": self.temperature,
-            "top_p": 0.9,
             "do_sample": True
             }
+        for param, value in [
+            ("max_new_tokens", self.max_tokens),
+            ("top_p", self.topP)
+        ]:
+            if value is not None:
+                default_params[param] = value    
         # Construct the complete payload with prompt and generation parameters
         payload = {
             "inputs": prompt,
