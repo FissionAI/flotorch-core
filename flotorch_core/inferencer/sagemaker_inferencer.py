@@ -173,7 +173,11 @@ class SageMakerInferencer(BaseInferencer):
         
         example_text = ""
         for example in selected_examples:
-            example_text += f"- {example['example']}\n"
+            if "example" in example:
+                example_text += f"- {example['example']}\n"
+            elif "question" in example and "answer" in example:
+                example_text += f"user - {example['question']}\n"
+                example_text += f"assistant - {example['answer']}\n"
 
         logger.info(f"into {self.n_shot_prompts} shot prompt  with examples {len(selected_examples)}")
 
