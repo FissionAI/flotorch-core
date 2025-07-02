@@ -79,7 +79,7 @@ class RagasEvaluator(BaseEvaluator):
                 """
                 This mimics LangChain's ChatOpenAI behavior.
                 """
-                metadata, response = self.internal_llm.generate_text(user_query=prompt, context=[])
+                metadata, response = self.internal_llm.generate_text(user_query=prompt, use_system=False)
                 return response
             
             async def ainvoke(self, prompt: str) -> str:
@@ -96,8 +96,8 @@ class RagasEvaluator(BaseEvaluator):
                 responses = []
                 for prompt in prompts:
                     metadata, response = self.internal_llm.generate_text(
-                        user_query=prompt.text, 
-                        context=[]
+                        user_query=prompt.text,
+                        use_system=False
                     )
                     responses.append(response)
                 
