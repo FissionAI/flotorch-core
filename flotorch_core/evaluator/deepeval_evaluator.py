@@ -196,5 +196,5 @@ class DeepEvalEvaluator(BaseEvaluator):
             metrics=selected_metrics + self.custom_metrics,
             error_config=ErrorConfig(ignore_errors=True)
         )
-        return eval_results.model_dump()
+        return eval_results
 
